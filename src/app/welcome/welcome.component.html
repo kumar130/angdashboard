@@ -1,0 +1,23 @@
+<div class="welcome-container">
+    <div class="hero">
+        <h1>AWS Tag Compliance Dashboard</h1>
+        <p class="subtitle">
+            Automated visibility into AWS tag hygiene across multiple accounts
+        </p>
+
+        <div class="features">
+            <div>✔ Zero Athena cost</div>
+            <div>✔ CSV / Lambda driven</div>
+            <div>✔ Multi-account ready</div>
+            <div>✔ Kubernetes & EKS friendly</div>
+        </div>
+
+        <button class="primary big" (click)="start()">
+            Get Started →
+        </button>
+    </div>
+
+    <div class="pipeline">
+        Lambda → S3 (CSV) → Compliance Engine → Dashboard
+    </div>
+</div>
