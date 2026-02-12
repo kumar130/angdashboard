@@ -1,58 +1,19 @@
-<div class="page">
-    <div class="card">
+<div class="card">
+    <h1>AWS Tag Compliance Results</h1>
 
-        <h1>AWS Tag Compliance</h1>
+    <div class="stats">
+        <div class="stat" *ngFor="let r of rules">
+            <h3>{{ r.key }}</h3>
+            <p>{{ r.compliance }}%</p>
 
-        <!-- CONFIG PANEL -->
-        <div class="config">
-            <h3>Tag Compliance Configuration</h3>
-
-            <input
-                    type="text"
-                    placeholder="Tag Key (e.g. environment)"
-                    [(ngModel)]="newTagKey" />
-
-            <input
-                    type="text"
-                    placeholder="Allowed Values (comma separated)"
-                    [(ngModel)]="newTagValues" />
-
-            <button (click)="addRule()">Add Rule</button>
-
-            <button class="primary" (click)="evaluateCompliance()">
-                Evaluate
-            </button>
+            <details>
+                <summary>Non-compliant resources</summary>
+                <ul>
+                    <li *ngFor="let n of r.nonCompliant">
+                        {{ n.resource }} → {{ n.value }}
+                    </li>
+                </ul>
+            </details>
         </div>
-
-        <!-- COMPLIANCE RESULTS -->
-        <div class="stats" *ngIf="tagRules.length">
-
-            <div class="stat clickable"
-                 *ngFor="let rule of tagRules"
-                 (click)="toggle(rule)">
-                <h3>{{ rule.key }}</h3>
-                <p>{{ rule.compliance }}%</p>
-            </div>
-
-        </div>
-
-        <!-- DRILL DOWN -->
-        <div *ngFor="let rule of tagRules">
-            <div *ngIf="rule.expanded" class="details">
-                <h4>Non-compliant: {{ rule.key }}</h4>
-
-                <table>
-                    <tr>
-                        <th>Resource</th>
-                        <th>Value</th>
-                    </tr>
-                    <tr *ngFor="let r of rule.nonCompliant">
-                        <td>{{ r.resource }}</td>
-                        <td>{{ r.value }}</td>
-                    </tr>
-                </table>
-            </div>
-        </div>
-
     </div>
 </div>
