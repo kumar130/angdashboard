@@ -3,9 +3,7 @@ import { Component } from '@angular/core';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  template: `
-    <h2>AWS Tag Compliance Dashboard</h2>
-    <p>Angular + Kubernetes ready</p>
-  `
+  templateUrl: './dashboard.component.html',
+  styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent {}
