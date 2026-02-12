@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tag-dashboard
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tag-dashboard
+  template:
+    metadata:
+      labels:
+        app: tag-dashboard
+    spec:
+      containers:
+      - name: dashboard
+        image: tag-dashboard:latest
+        ports:
+        - containerPort: 80
