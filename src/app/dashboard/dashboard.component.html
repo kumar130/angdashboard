@@ -2,9 +2,6 @@
     <div class="card">
 
         <h1>AWS Tag Compliance</h1>
-        <p class="subtitle">
-            Local CSV based validation (initial test)
-        </p>
 
         <div class="stats">
 
@@ -13,20 +10,46 @@
                 <p>{{ totalResources }}</p>
             </div>
 
-            <div class="stat">
-                <h3>Customer Tag</h3>
-                <p>{{ customerCompliance }}%</p>
+            <div class="stat clickable" (click)="toggleEnvDetails()">
+                <h3>Environment (sbx)</h3>
+                <p>{{ envCompliance }}%</p>
             </div>
 
-            <div class="stat">
-                <h3>Environment Tag</h3>
-                <p>{{ environmentCompliance }}%</p>
+            <div class="stat clickable" (click)="toggleCustomerDetails()">
+                <h3>Customer</h3>
+                <p>{{ customerCompliance }}%</p>
             </div>
 
         </div>
 
-        <div class="note">
-            Source: CSV from project assets
+        <!-- ENV DETAILS -->
+        <div *ngIf="showEnvDetails" class="details">
+            <h4>Non-compliant Environment Tags</h4>
+            <table>
+                <tr>
+                    <th>Resource</th>
+                    <th>Value</th>
+                </tr>
+                <tr *ngFor="let r of nonCompliantEnv">
+                    <td>{{ r.resourceId }}</td>
+                    <td>{{ r.value }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- CUSTOMER DETAILS -->
+        <div *ngIf="showCustomerDetails" class="details">
+            <h4>Non-compliant Customer Tags</h4>
+            <table>
+                <tr>
+                    <th>Resource</th>
+                    <th>Value</th>
+                </tr>
+                <tr *ngFor="let r of nonCompliantCustomer">
+                    <td>{{ r.resourceId }}</td>
+                    <td>{{ r.value }}</td>
+                </tr>
+            </table>
         </div>
 
     </div>
