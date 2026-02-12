@@ -1,29 +1,26 @@
 <div class="page">
-
     <div class="card">
 
         <h1>AWS Tag Compliance</h1>
 
-        <p class="subtitle">
-            Automated visibility into AWS tag hygiene across multiple accounts.
-        </p>
+        <div class="stats">
 
-        <div class="features">
-            <div>✔ Multi-account reporting</div>
-            <div>✔ Hourly tag compliance evaluation</div>
-            <div>✔ Zero Athena cost architecture</div>
-            <div>✔ Kubernetes & EKS ready</div>
-        </div>
+            <div class="stat">
+                <h3>Total Resources</h3>
+                <p>{{ totalResources }}</p>
+            </div>
 
-        <div class="status">
-            <span class="dot"></span>
-            Data pipeline initializing
-        </div>
+            <div class="stat">
+                <h3>Customer Tag</h3>
+                <p>{{ customerCompliance }}%</p>
+            </div>
 
-        <div class="pipeline">
-            Lambda → S3 (CSV) → Dashboard
+            <div class="stat">
+                <h3>Environment Tag</h3>
+                <p>{{ environmentCompliance }}%</p>
+            </div>
+
         </div>
 
     </div>
-
 </div>
