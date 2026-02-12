@@ -30,11 +30,13 @@ export class TagConfigService {
 
       this.csvRows.forEach(row => {
         const value = row[rule.key];
+
         if (value && rule.allowedValues.includes(value)) {
           valid++;
         } else {
           rule.nonCompliant!.push({
-            resource: row['resourceId'] || 'UNKNOWN',
+            resource: row.resourceName || 'UNKNOWN',
+            resourceType: row.resourceType || 'UNKNOWN',
             value: value || 'MISSING'
           });
         }
@@ -46,4 +48,3 @@ export class TagConfigService {
     return this.rules;
   }
 }
-

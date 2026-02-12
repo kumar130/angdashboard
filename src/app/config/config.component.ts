@@ -21,10 +21,13 @@ export class ConfigComponent {
   ) {}
 
   addRule() {
+    if (!this.tagKey || !this.tagValues) return;
+
     this.rules.push({
       key: this.tagKey.trim(),
       allowedValues: this.tagValues.split(',').map(v => v.trim())
     });
+
     this.tagKey = '';
     this.tagValues = '';
   }

@@ -27,12 +27,38 @@ export class DashboardComponent implements OnInit {
     const rows = data.split('\n');
     const headers = rows[0].split(',');
 
-    const parsed = rows.slice(1).filter(r => r).map(r => {
-      const cols = r.split(',');
-      const obj: any = {};
-      headers.forEach((h, i) => obj[h.trim()] = cols[i]?.trim());
-      return obj;
-    });
+    const arnHeader = headers.find(h => h.toLowerCase().includes('arn'));
+    const resourceTypeHeader = headers.find(h =>
+      h.toLowerCase().includes('resourcetype')
+    );
+
+    const parsed = rows.slice(1)
+      .filter(r => r)
+      .map(r => {
+        const cols = r.split(',');
+        const obj: any = {};
+
+        headers.forEach((h, i) => {
+          obj[h.trim()] = cols[i]?.trim();
+        });
+
+        // Resource Name from ARN
+        if (arnHeader && obj[arnHeader]) {
+          const arn = obj[arnHeader];
+          obj.resourceName = arn.substring(arn.lastIndexOf('/') + 1);
+        } else {
+          obj.resourceName = 'UNKNOWN';
+        }
+
+        // Resource Type
+        if (resourceTypeHeader && obj[resourceTypeHeader]) {
+          obj.resourceType = obj[resourceTypeHeader];
+        } else {
+          obj.resourceType = 'UNKNOWN';
+        }
+
+        return obj;
+      });
 
     this.configService.setCSV(parsed);
     this.total = parsed.length;

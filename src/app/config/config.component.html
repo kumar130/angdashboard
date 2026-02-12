@@ -1,11 +1,13 @@
 <div class="card">
     <h1>Tag Compliance Configuration</h1>
 
-    <input placeholder="Tag key (environment)"
-           [(ngModel)]="tagKey">
+    <input
+            placeholder="Tag key (e.g. environment)"
+            [(ngModel)]="tagKey" />
 
-    <input placeholder="Allowed values (comma separated)"
-           [(ngModel)]="tagValues">
+    <input
+            placeholder="Allowed values (comma separated)"
+            [(ngModel)]="tagValues" />
 
     <button (click)="addRule()">Add Rule</button>
 

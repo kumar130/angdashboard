@@ -8,11 +8,19 @@
 
             <details>
                 <summary>Non-compliant resources</summary>
-                <ul>
-                    <li *ngFor="let n of r.nonCompliant">
-                        {{ n.resource }} → {{ n.value }}
-                    </li>
-                </ul>
+
+                <table>
+                    <tr>
+                        <th>Resource</th>
+                        <th>Resource Type</th>
+                        <th>Tag Value</th>
+                    </tr>
+                    <tr *ngFor="let n of r.nonCompliant">
+                        <td>{{ n.resource }}</td>
+                        <td>{{ n.resourceType }}</td>
+                        <td>{{ n.value }}</td>
+                    </tr>
+                </table>
             </details>
         </div>
     </div>
