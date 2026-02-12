@@ -1,28 +1,33 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
+interface TagRule {
+  key: string;
+  allowedValues: string[];
+  compliance?: number;
+  nonCompliant?: any[];
+  expanded?: boolean;
+}
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
 
   totalResources = 0;
+  csvRows: any[] = [];
 
-  envCompliance = 0;
-  customerCompliance = 0;
+  // User input model
+  newTagKey = '';
+  newTagValues = '';
 
-  showEnvDetails = false;
-  showCustomerDetails = false;
-
-  nonCompliantEnv: any[] = [];
-  nonCompliantCustomer: any[] = [];
-
-  validCustomers = ['multi-tenant', 'BI', 'CTOS'];
+  tagRules: TagRule[] = [];
 
   constructor(private http: HttpClient) {}
 
@@ -32,64 +37,71 @@ export class DashboardComponent implements OnInit {
 
   loadCSV() {
     this.http.get('assets/tag-report.csv', { responseType: 'text' })
-      .subscribe(csv => this.processCSV(csv));
+      .subscribe(csv => this.parseCSV(csv));
   }
 
-  processCSV(data: string) {
-
+  parseCSV(data: string) {
     const rows = data.split('\n');
     const headers = rows[0].split(',');
-
-    const resourceIndex = headers.findIndex(h => h.toLowerCase().includes('resource'));
-    const envIndex = headers.findIndex(h => h.trim() === 'environment');
-    const customerIndex = headers.findIndex(h => h.trim() === 'customer');
-
-    let envValidCount = 0;
-    let customerValidCount = 0;
 
     for (let i = 1; i < rows.length; i++) {
       if (!rows[i]) continue;
 
-      const cols = rows[i].split(',');
-      this.totalResources++;
+      const values = rows[i].split(',');
+      const row: any = {};
 
-      const resourceId = cols[resourceIndex];
-      const env = cols[envIndex];
-      const customer = cols[customerIndex];
+      headers.forEach((h, idx) => {
+        row[h.trim()] = values[idx]?.trim();
+      });
 
-      // ENVIRONMENT RULE
-      if (env === 'sbx') {
-        envValidCount++;
-      } else {
-        this.nonCompliantEnv.push({
-          resourceId,
-          value: env || 'MISSING'
-        });
-      }
-
-      // CUSTOMER RULE
-      if (this.validCustomers.includes(customer)) {
-        customerValidCount++;
-      } else {
-        this.nonCompliantCustomer.push({
-          resourceId,
-          value: customer || 'MISSING'
-        });
-      }
+      this.csvRows.push(row);
     }
 
-    this.envCompliance =
-      Math.round((envValidCount / this.totalResources) * 100);
-
-    this.customerCompliance =
-      Math.round((customerValidCount / this.totalResources) * 100);
+    this.totalResources = this.csvRows.length;
   }
 
-  toggleEnvDetails() {
-    this.showEnvDetails = !this.showEnvDetails;
+  addRule() {
+    if (!this.newTagKey || !this.newTagValues) return;
+
+    this.tagRules.push({
+      key: this.newTagKey.trim(),
+      allowedValues: this.newTagValues.split(',').map(v => v.trim()),
+      compliance: 0,
+      nonCompliant: [],
+      expanded: false
+    });
+
+    this.newTagKey = '';
+    this.newTagValues = '';
   }
 
-  toggleCustomerDetails() {
-    this.showCustomerDetails = !this.showCustomerDetails;
+  evaluateCompliance() {
+
+    this.tagRules.forEach(rule => {
+
+      let validCount = 0;
+      rule.nonCompliant = [];
+
+      this.csvRows.forEach(row => {
+        const value = row[rule.key];
+
+        if (value && rule.allowedValues.includes(value)) {
+          validCount++;
+        } else {
+          rule.nonCompliant!.push({
+            resource: row['resourceId'] || row['resource'] || 'UNKNOWN',
+            value: value || 'MISSING'
+          });
+        }
+      });
+
+      rule.compliance = Math.round(
+        (validCount / this.totalResources) * 100
+      );
+    });
+  }
+
+  toggle(rule: TagRule) {
+    rule.expanded = !rule.expanded;
   }
 }
