@@ -1,19 +1,20 @@
 import { Component } from '@angular/core';
-import { TagConfigService } from '../tag-config.service';
 import { CommonModule } from '@angular/common';
+import { TagConfigService } from '../tag-config.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './dashboard.component.html'
+  templateUrl: './dashboard.component.html',
+  styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent {
 
-  config: any;
+  rules: { key: string; value: string }[] = [];
 
   constructor(private service: TagConfigService) {
-    this.config = this.service.getConfig();
+    this.rules = this.service.getRules();
   }
 
 }

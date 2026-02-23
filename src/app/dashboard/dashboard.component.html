@@ -1,27 +1,9 @@
-<div class="card">
-    <h1>AWS Tag Compliance Results</h1>
+<div class="container">
 
-    <div class="stats">
-        <div class="stat" *ngFor="let r of rules">
-            <h3>{{ r.key }}</h3>
-            <p>{{ r.compliance }}%</p>
+    <h2>Dashboard</h2>
 
-            <details>
-                <summary>Non-compliant resources</summary>
-
-                <table>
-                    <tr>
-                        <th>Resource</th>
-                        <th>Resource Type</th>
-                        <th>Tag Value</th>
-                    </tr>
-                    <tr *ngFor="let n of r.nonCompliant">
-                        <td>{{ n.resource }}</td>
-                        <td>{{ n.resourceType }}</td>
-                        <td>{{ n.value }}</td>
-                    </tr>
-                </table>
-            </details>
-        </div>
+    <div class="stat" *ngFor="let r of rules">
+        <b>{{ r.key }}</b> : {{ r.value }}
     </div>
+
 </div>

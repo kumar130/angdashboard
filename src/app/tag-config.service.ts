@@ -5,14 +5,14 @@ import { Injectable } from '@angular/core';
 })
 export class TagConfigService {
 
-  private config: any = {};
+  private rules: { key: string; value: string }[] = [];
 
-  setConfig(key: string, value: string) {
-    this.config = { key, value };
+  setRules(rules: { key: string; value: string }[]) {
+    this.rules = rules;
   }
 
-  getConfig() {
-    return this.config;
+  getRules() {
+    return this.rules;
   }
 
 }

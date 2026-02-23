@@ -1,23 +1,33 @@
-<div class="card">
-    <h1>Tag Compliance Configuration</h1>
+<div class="container">
 
-    <input
-            placeholder="Tag key (e.g. environment)"
-            [(ngModel)]="tagKey" />
+    <h2>Configure Tag Policy</h2>
 
-    <input
-            placeholder="Allowed values (comma separated)"
-            [(ngModel)]="tagValues" />
+    <div class="form">
+        <input
+                type="text"
+                placeholder="Tag Key"
+                [(ngModel)]="tagKey"
+        />
 
-    <button (click)="addRule()">Add Rule</button>
+        <input
+                type="text"
+                placeholder="Tag Value"
+                [(ngModel)]="tagValue"
+        />
 
-    <ul>
-        <li *ngFor="let r of rules">
-            {{ r.key }} = {{ r.allowedValues.join(', ') }}
-        </li>
-    </ul>
+        <button (click)="addRule()">Add Rule</button>
+    </div>
+
+    <div class="rules" *ngIf="rules.length > 0">
+        <h3>Rules Added</h3>
+
+        <div *ngFor="let r of rules">
+            {{ r.key }} : {{ r.value }}
+        </div>
+    </div>
 
     <button class="primary" (click)="saveAndGo()">
-        Save & View Dashboard
+        Continue →
     </button>
+
 </div>
