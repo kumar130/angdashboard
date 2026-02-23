@@ -13,8 +13,9 @@ import { TagConfigService, TagRule } from '../tag-config.service';
 export class ConfigComponent {
 
   rules: TagRule[] = [];
-  key = '';
-  value = '';
+
+  tagKey = '';
+  tagValue = '';
 
   constructor(
     private service: TagConfigService,
@@ -22,18 +23,18 @@ export class ConfigComponent {
   ) {}
 
   addRule() {
-    if (!this.key || !this.value) return;
+    if (!this.tagKey || !this.tagValue) return;
 
     this.rules.push({
-      key: this.key,
-      value: this.value
+      key: this.tagKey,
+      value: this.tagValue
     });
 
-    this.key = '';
-    this.value = '';
+    this.tagKey = '';
+    this.tagValue = '';
   }
 
-  save() {
+  saveAndGo() {
     this.service.setRules(this.rules);
     this.router.navigate(['/dashboard']);
   }
