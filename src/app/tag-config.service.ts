@@ -5,9 +5,9 @@ import { Injectable } from '@angular/core';
 })
 export class TagConfigService {
 
-  private rules: { key: string; value: string }[] = [];
+  private rules: any[] = [];
 
-  setRules(rules: { key: string; value: string }[]) {
+  setRules(rules: any[]) {
     this.rules = rules;
   }
 

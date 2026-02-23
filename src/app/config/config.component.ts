@@ -8,8 +8,7 @@ import { TagConfigService } from '../tag-config.service';
   selector: 'app-config',
   standalone: true,
   imports: [FormsModule, CommonModule],
-  templateUrl: './config.component.html',
-  styleUrls: ['./config.component.css']
+  templateUrl: './config.component.html'
 })
 export class ConfigComponent {
 
@@ -20,7 +19,7 @@ export class ConfigComponent {
 
   constructor(
     private router: Router,
-    private service: TagConfigService
+    private configService: TagConfigService
   ) {}
 
   addRule() {
@@ -31,4 +30,13 @@ export class ConfigComponent {
       value: this.tagValue
     });
 
-    this.
+    this.tagKey = '';
+    this.tagValue = '';
+  }
+
+  saveAndGo() {
+    this.configService.setRules(this.rules);
+    this.router.navigate(['/dashboard']);
+  }
+
+}

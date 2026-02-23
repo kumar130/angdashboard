@@ -2,8 +2,8 @@
 
     <h2>Dashboard</h2>
 
-    <div class="stat" *ngFor="let r of rules">
-        <b>{{ r.key }}</b> : {{ r.value }}
+    <div *ngFor="let r of rules">
+        {{ r.key }} : {{ r.value }}
     </div>
 
 </div>

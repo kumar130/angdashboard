@@ -6,15 +6,14 @@ import { TagConfigService } from '../tag-config.service';
   selector: 'app-dashboard',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css']
+  templateUrl: './dashboard.component.html'
 })
 export class DashboardComponent {
 
-  rules: { key: string; value: string }[] = [];
+  rules: any[] = [];
 
-  constructor(private service: TagConfigService) {
-    this.rules = this.service.getRules();
+  constructor(private configService: TagConfigService) {
+    this.rules = this.configService.getRules();
   }
 
 }
