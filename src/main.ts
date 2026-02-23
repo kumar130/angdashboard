@@ -1,14 +1,13 @@
 import 'zone.js';
 
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
-import { AppComponent } from './app/app.component';
-import { routes } from './app/app.routes';
+import { provideForms } from '@angular/forms';
+import { ReportComponent } from './app/report.component';
 
-bootstrapApplication(AppComponent, {
+bootstrapApplication(ReportComponent, {
   providers: [
-    provideRouter(routes),
-    provideHttpClient()
+    provideHttpClient(),
+    provideForms()
   ]
-}).catch(err => console.error(err));
+});
