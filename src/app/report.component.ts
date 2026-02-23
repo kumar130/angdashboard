@@ -19,27 +19,56 @@ import * as Papa from 'papaparse';
       <p><strong>Compliance %:</strong> {{ overallPercentage }}%</p>
     </div>
 
-    <!-- PER RESOURCE TYPE -->
+    <!-- RESOURCE TYPES -->
     <div *ngFor="let type of typeStats | keyvalue">
 
-      <div style="padding:10px; border:1px solid #ddd; margin-bottom:10px;">
-        <h3>{{ type.key }}</h3>
+      <!-- Type Header -->
+      <div
+        style="cursor:pointer; padding:10px; border:1px solid #ddd; margin-bottom:5px; background:#f5f5f5;"
+        (click)="toggleType(type.key)"
+      >
+        <strong>
+          {{ expandedTypes[type.key] ? '▼' : '▶' }}
+          {{ type.key }}
+        </strong>
 
-        <p><strong>Total:</strong> {{ type.value.total }}</p>
-        <p><strong>Compliant:</strong> {{ type.value.passed }}</p>
-        <p><strong>Non-Compliant:</strong> {{ type.value.failed }}</p>
-        <p><strong>Compliance %:</strong> {{ type.value.percentage }}%</p>
+        (Total: {{ type.value.total }},
+         Failed: {{ type.value.failed }},
+         {{ type.value.percentage }}%)
       </div>
 
-      <!-- Failed resources list -->
-      <div *ngIf="failed[type.key]">
-        <div *ngFor="let r of failed[type.key]">
-          <strong>{{ r.displayName }}</strong>
-          <div *ngFor="let f of r.failures">
-            - {{ f.key }} expected {{ f.expected }}, actual {{ f.actual }}
+      <!-- Expanded Type Section -->
+      <div *ngIf="expandedTypes[type.key]" style="padding-left:20px;">
+
+        <div *ngIf="failed[type.key]">
+
+          <div *ngFor="let r of failed[type.key]">
+
+            <!-- Resource Header -->
+            <div
+              style="cursor:pointer; margin:5px 0;"
+              (click)="toggleResource(type.key, r.displayName)"
+            >
+              <strong>
+                {{ isResourceExpanded(type.key, r.displayName) ? '▼' : '▶' }}
+                {{ r.displayName }}
+              </strong>
+            </div>
+
+            <!-- Expanded Resource Failures -->
+            <div
+              *ngIf="isResourceExpanded(type.key, r.displayName)"
+              style="padding-left:20px;"
+            >
+              <div *ngFor="let f of r.failures">
+                - {{ f.key }} expected {{ f.expected }}, actual {{ f.actual }}
+              </div>
+            </div>
+
           </div>
-          <hr>
+
         </div>
+
       </div>
 
     </div>
@@ -54,6 +83,9 @@ export class ReportComponent implements OnInit {
   passed = 0;
   failedCount = 0;
   overallPercentage = 0;
+
+  expandedTypes: any = {};
+  expandedResources: any = {};
 
   constructor(private http: HttpClient) {}
 
@@ -87,6 +119,7 @@ export class ReportComponent implements OnInit {
 
               this.typeStats[type].total++;
 
+              // Friendly display name
               let displayName = r['Name'];
               if (!displayName && r['ResourceArn']) {
                 const parts = r['ResourceArn'].split('/');
@@ -100,12 +133,13 @@ export class ReportComponent implements OnInit {
                 const key = t.key.trim().toLowerCase();
                 const expected = t.value.trim().toLowerCase();
 
-                // Find matching column dynamically (case insensitive)
                 const column = Object.keys(r).find(
                   k => k.trim().toLowerCase() === key
                 );
 
-                const actual = column ? (r[column] || '').trim().toLowerCase() : '';
+                const actual = column
+                  ? (r[column] || '').trim().toLowerCase()
+                  : '';
 
                 if (actual !== expected) {
                   failures.push({
@@ -132,6 +166,7 @@ export class ReportComponent implements OnInit {
                 });
 
               } else {
+
                 this.passed++;
                 this.typeStats[type].passed++;
               }
@@ -151,8 +186,27 @@ export class ReportComponent implements OnInit {
                   ? Math.round((stats.passed / stats.total) * 100)
                   : 0;
             });
+
           }
         });
+
       });
   }
+
+  toggleType(type: string) {
+    this.expandedTypes[type] = !this.expandedTypes[type];
+  }
+
+  toggleResource(type: string, name: string) {
+    if (!this.expandedResources[type]) {
+      this.expandedResources[type] = {};
+    }
+    this.expandedResources[type][name] =
+      !this.expandedResources[type][name];
+  }
+
+  isResourceExpanded(type: string, name: string): boolean {
+    return this.expandedResources[type]?.[name];
+  }
+
 }
