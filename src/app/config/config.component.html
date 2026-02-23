@@ -2,34 +2,30 @@
 
     <h2>Configure Tag Policy</h2>
 
-    <div>
-
+    <div class="form">
         <input
+                type="text"
                 placeholder="Tag Key"
-                [(ngModel)]="tagKey"
-        />
+                [(ngModel)]="tagKey" />
 
         <input
-                placeholder="Allowed Values (comma separated)"
-                [(ngModel)]="tagValue"
-        />
+                type="text"
+                placeholder="Tag Value"
+                [(ngModel)]="tagValue" />
 
         <button (click)="addRule()">Add Rule</button>
-
     </div>
 
-    <div *ngIf="rules.length">
-
-        <h3>Rules</h3>
+    <div *ngIf="rules.length > 0" class="rules">
+        <h4>Rules</h4>
 
         <div *ngFor="let r of rules">
-            {{ r.key }} = {{ r.values.join(', ') }}
+            {{ r.key }} : {{ r.value }}
         </div>
-
     </div>
 
-    <button (click)="saveAndGo()">
-        Continue to Dashboard
+    <button class="primary" (click)="saveAndGo()">
+        Save & View Dashboard
     </button>
 
 </div>

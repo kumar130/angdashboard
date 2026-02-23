@@ -3,35 +3,37 @@
     <h2>Compliance Dashboard</h2>
 
     <div class="stats">
-        <div>Total: {{total}}</div>
-        <div>Compliant: {{compliant}}</div>
-        <div>Non-Compliant: {{nonCompliant}}</div>
+
+        <div class="stat">
+            Total: {{ resources.length }}
+        </div>
+
+        <div class="stat">
+            Compliant: {{ compliant }}
+        </div>
+
+        <div class="stat">
+            Non-Compliant: {{ nonCompliant }}
+        </div>
+
     </div>
 
-    <table>
-        <thead>
+    <table *ngIf="resources.length > 0">
+
         <tr>
             <th>Account</th>
-            <th>Region</th>
-            <th>Service</th>
-            <th>Name</th>
-            <th>Product</th>
-            <th>Environment</th>
-            <th>Compliance</th>
+            <th>Resource</th>
+            <th>Owner</th>
+            <th>Status</th>
         </tr>
-        </thead>
 
-        <tbody>
-        <tr *ngFor="let r of data">
-            <td>{{r.accountId}}</td>
-            <td>{{r.region}}</td>
-            <td>{{r.service}}</td>
-            <td>{{r.name}}</td>
-            <td>{{r.product}}</td>
-            <td>{{r.environment}}</td>
-            <td>{{r.compliance}}</td>
+        <tr *ngFor="let r of resources">
+            <td>{{ r.accountId }}</td>
+            <td>{{ r.resourceName }}</td>
+            <td>{{ r.ownerName }}</td>
+            <td>{{ r.compliance }}</td>
         </tr>
-        </tbody>
+
     </table>
 
 </div>

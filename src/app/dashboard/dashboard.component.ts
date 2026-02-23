@@ -10,25 +10,23 @@ import { TagConfigService } from '../tag-config.service';
 })
 export class DashboardComponent implements OnInit {
 
-  data: any[] = [];
-
-  total = 0;
+  resources: any[] = [];
   compliant = 0;
   nonCompliant = 0;
 
   constructor(private service: TagConfigService) {}
 
-  ngOnInit() {
+  ngOnInit(): void {
 
     this.service.loadCsv().subscribe(resources => {
 
       const result = this.service.calculateCompliance(resources);
 
-      this.data = result;
+      this.resources = result;
 
-      this.total = result.length;
       this.compliant = result.filter(r => r.compliance === 'COMPLIANT').length;
       this.nonCompliant = result.filter(r => r.compliance === 'NON_COMPLIANT').length;
+
     });
   }
 }

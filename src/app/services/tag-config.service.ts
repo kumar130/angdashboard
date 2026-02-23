@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
-export interface Rule {
+export interface TagRule {
   key: string;
   value: string;
 }
@@ -12,64 +12,63 @@ export interface Rule {
 })
 export class TagConfigService {
 
-  private rules: Rule[] = [];
+  private rules: TagRule[] = [];
 
   constructor(private http: HttpClient) {}
 
-  setRules(rules: Rule[]) {
+  setRules(rules: TagRule[]) {
     this.rules = rules;
   }
 
-  getRules(): Rule[] {
+  getRules(): TagRule[] {
     return this.rules;
   }
 
+  // LOAD CSV FROM ASSETS
   loadCsv(): Observable<any[]> {
-    return this.http.get('assets/data.csv', { responseType: 'text' }).pipe(
-      map(text => this.parseTSV(text))
-    );
+    return this.http
+      .get('assets/tag-report.csv', { responseType: 'text' })
+      .pipe(map(text => this.parseTSV(text)));
   }
 
-  private parseTSV(data: string): any[] {
-
-    const lines = data.split('\n').filter(l => l.trim().length > 0);
+  // PARSE TAB SEPARATED FILE
+  private parseTSV(text: string): any[] {
+    const lines = text.split('\n').filter(l => l.trim().length > 0);
 
     return lines.map(line => {
-      const cols = line.split('\t');   // ⭐ TAB separated
+      const cols = line.split('\t');
 
       return {
-        accountId: cols[0],
-        accountName: cols[1],
-        region: cols[2],
-        service: cols[3],
-        resourceArn: cols[4],
-        name: cols[6] || '',
-        product: cols[15] || '',
-        environment: cols[16] || '',
-        ownerEmail: cols[22] || ''
+        accountId: cols[0] || '',
+        accountName: cols[1] || '',
+        region: cols[2] || '',
+        service: cols[3] || '',
+        arn: cols[4] || '',
+        resourceName: cols[10] || '',
+        ownerEmail: cols[22] || '',
+        ownerName: cols[23] || '',
+        compliance: 'UNKNOWN'
       };
     });
   }
 
-  calculateCompliance(resources: any[]) {
-
+  // CALCULATE COMPLIANCE
+  calculateCompliance(resources: any[]): any[] {
     const rules = this.rules;
 
-    return resources.map(r => {
-
+    return resources.map(res => {
       let compliant = true;
 
-      for (const rule of rules) {
-        const value = (r[rule.key] || '').toLowerCase();
+      rules.forEach(rule => {
+        const value = (res.resourceName || '').toLowerCase();
 
         if (!value.includes(rule.value.toLowerCase())) {
           compliant = false;
-          break;
         }
-      }
+      });
 
       return {
-        ...r,
+        ...res,
         compliance: compliant ? 'COMPLIANT' : 'NON_COMPLIANT'
       };
     });
