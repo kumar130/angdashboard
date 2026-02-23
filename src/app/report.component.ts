@@ -10,6 +10,12 @@ import * as Papa from 'papaparse';
   template: `
     <h2>Compliance Report</h2>
 
+    <div *ngIf="debug">
+      <h3>DEBUG (First Row)</h3>
+      <pre>{{ debug | json }}</pre>
+      <hr>
+    </div>
+
     <div *ngFor="let type of failed | keyvalue">
       <h3>{{ type.key }}</h3>
 
@@ -28,6 +34,7 @@ import * as Papa from 'papaparse';
 export class ReportComponent implements OnInit {
 
   failed: any = {};
+  debug: any;
 
   constructor(private http: HttpClient) {}
 
@@ -45,29 +52,25 @@ export class ReportComponent implements OnInit {
 
             const rows = res.data;
 
+            // 👇 SHOW FIRST ROW FOR DEBUG
+            this.debug = rows[0];
+
             rows.forEach((r: any) => {
 
-              const type = r['ResourceType'] || 'Unknown';
-              const id = r['ResourceArn'] || 'Unknown';
+              const type = r['ResourceType']?.trim() || 'Unknown';
+              const id = r['ResourceArn']?.trim() || 'Unknown';
 
               let failures: any[] = [];
 
               required.forEach((t: any) => {
 
-                let actualValue =
-                  r[t.key] ||
-                  r[t.key.toLowerCase()] ||
-                  r[t.key.toUpperCase()] ||
-                  r['Environment'] ||
-                  r['environment'] ||
-                  r['env'] ||
-                  r['ghr:environment'];
+                const actual = r[t.key] || r[t.key?.toLowerCase()];
 
-                if (actualValue !== t.value) {
+                if (actual !== t.value) {
                   failures.push({
                     key: t.key,
                     expected: t.value,
-                    actual: actualValue || 'Missing'
+                    actual: actual || 'Missing'
                   });
                 }
               });
