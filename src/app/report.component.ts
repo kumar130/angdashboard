@@ -10,17 +10,11 @@ import * as Papa from 'papaparse';
   template: `
     <h2>Compliance Report</h2>
 
-    <div *ngIf="debug">
-      <h3>DEBUG (First Row)</h3>
-      <pre>{{ debug | json }}</pre>
-      <hr>
-    </div>
-
     <div *ngFor="let type of failed | keyvalue">
       <h3>{{ type.key }}</h3>
 
       <div *ngFor="let r of type.value">
-        <strong>{{ r.id }}</strong>
+        <strong>{{ r.displayName }}</strong>
 
         <div *ngFor="let f of r.failures">
           - {{ f.key }} expected {{ f.expected }}, actual {{ f.actual }}
@@ -34,7 +28,6 @@ import * as Papa from 'papaparse';
 export class ReportComponent implements OnInit {
 
   failed: any = {};
-  debug: any;
 
   constructor(private http: HttpClient) {}
 
@@ -52,21 +45,32 @@ export class ReportComponent implements OnInit {
 
             const rows = res.data;
 
-            // 👇 SHOW FIRST ROW FOR DEBUG
-            this.debug = rows[0];
-
             rows.forEach((r: any) => {
 
               const type = r['ResourceType']?.trim() || 'Unknown';
-              const id = r['ResourceArn']?.trim() || 'Unknown';
+
+              // ✅ Use Name if exists, else extract last part of ARN
+              let displayName = r['Name'];
+
+              if (!displayName && r['ResourceArn']) {
+                const parts = r['ResourceArn'].split('/');
+                displayName = parts[parts.length - 1];
+              }
 
               let failures: any[] = [];
 
               required.forEach((t: any) => {
 
-                const actual = r[t.key] || r[t.key?.toLowerCase()];
+                const actual =
+                  r[t.key] ||
+                  r[t.key?.toLowerCase()] ||
+                  r[t.key?.toUpperCase()] ||
+                  r['environment'] ||
+                  r['Environment'] ||
+                  r['env'] ||
+                  r['ghr:environment'];
 
-                if (actual !== t.value) {
+                if ((actual || '').trim() !== t.value) {
                   failures.push({
                     key: t.key,
                     expected: t.value,
@@ -82,7 +86,7 @@ export class ReportComponent implements OnInit {
                 }
 
                 this.failed[type].push({
-                  id,
+                  displayName,
                   failures
                 });
               }
