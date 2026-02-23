@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-welcome',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './welcome.component.html'
+  template: `
+    <h1>AWS Tag Compliance Dashboard</h1>
+    <button (click)="start()">Get Started</button>
+  `
 })
 export class WelcomeComponent {
 

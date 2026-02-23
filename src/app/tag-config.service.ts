@@ -2,16 +2,9 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
-export interface TagRule {
-  key: string;
-  value: string;
-}
-
-export interface ResourceRow {
+export interface Resource {
   accountId: string;
-  resourceId: string;
   tags: Record<string, string>;
-  compliance?: 'COMPLIANT' | 'NON_COMPLIANT';
 }
 
 @Injectable({
@@ -19,73 +12,70 @@ export interface ResourceRow {
 })
 export class TagConfigService {
 
-  private rules: TagRule[] = [];
+  requiredTags: Record<string, string> = {};
 
   constructor(private http: HttpClient) {}
 
-  setRules(rules: TagRule[]) {
-    this.rules = rules;
+  setRequiredTags(tags: Record<string, string>) {
+    this.requiredTags = tags;
   }
 
-  getRules() {
-    return this.rules;
-  }
+  loadCsv(): Observable<Resource[]> {
 
-  /**
-   * Load CSV from assets folder
-   */
-  loadCsv(): Observable<ResourceRow[]> {
     return this.http
       .get('assets/tag-report.csv', { responseType: 'text' })
-      .pipe(map(text => this.parseCsv(text)));
+      .pipe(map(csv => this.parseCsv(csv)));
   }
 
-  /**
-   * CSV parser
-   */
-  private parseCsv(text: string): ResourceRow[] {
-    const lines = text.split('\n').filter(l => l.trim().length > 0);
+  private parseCsv(csv: string): Resource[] {
 
-    if (lines.length < 2) return [];
+    const lines = csv.split('\n');
+    const header = lines[0].split(',');
 
-    const headers = lines[0].split(',').map(h => h.trim());
+    const resources: Resource[] = [];
 
-    return lines.slice(1).map(line => {
-      const cols = line.split(',');
+    for (let i = 1; i < lines.length; i++) {
 
-      const row: any = {};
-      headers.forEach((h, i) => {
-        row[h] = cols[i]?.trim();
+      if (!lines[i].trim()) continue;
+
+      const values = lines[i].split(',');
+
+      const obj: any = {};
+
+      header.forEach((h, idx) => {
+        obj[h.trim()] = values[idx]?.trim();
       });
 
       const tags: Record<string, string> = {};
 
-      Object.keys(row).forEach(k => {
-        if (k.startsWith('tag:')) {
-          tags[k.replace('tag:', '')] = row[k];
+      Object.keys(obj).forEach(key => {
+        if (key.startsWith('tag:')) {
+          tags[key.replace('tag:', '')] = obj[key];
         }
       });
 
-      return {
-        accountId: row['accountId'] || row['AccountId'] || '',
-        resourceId: row['resourceId'] || row['ResourceId'] || '',
+      resources.push({
+        accountId: obj['accountId'] || obj['AccountId'],
         tags
-      };
-    });
+      });
+    }
+
+    return resources;
   }
 
-  /**
-   * Compliance calculation
-   */
-  calculateCompliance(resources: ResourceRow[]): ResourceRow[] {
-
-    if (!this.rules.length) return resources;
+  calculateCompliance(resources: Resource[]) {
 
     return resources.map(r => {
 
-      const compliant = this.rules.every(rule => {
-        return r.tags?.[rule.key] === rule.value;
-      });
+      let compliant = true;
+
+      for (const key of Object.keys(this.requiredTags)) {
+
+        if (r.tags[key] !== this.requiredTags[key]) {
+          compliant = false;
+          break;
+        }
+      }
 
       return {
         ...r,

@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { TagConfigService, TagRule } from '../tag-config.service';
+import { CommonModule } from '@angular/common';
+import { TagConfigService } from '../tag-config.service';
 
 @Component({
   selector: 'app-config',
@@ -12,8 +12,6 @@ import { TagConfigService, TagRule } from '../tag-config.service';
 })
 export class ConfigComponent {
 
-  rules: TagRule[] = [];
-
   tagKey = '';
   tagValue = '';
 
@@ -22,20 +20,12 @@ export class ConfigComponent {
     private router: Router
   ) {}
 
-  addRule() {
-    if (!this.tagKey || !this.tagValue) return;
+  saveAndGo() {
 
-    this.rules.push({
-      key: this.tagKey,
-      value: this.tagValue
+    this.service.setRequiredTags({
+      [this.tagKey]: this.tagValue
     });
 
-    this.tagKey = '';
-    this.tagValue = '';
-  }
-
-  saveAndGo() {
-    this.service.setRules(this.rules);
     this.router.navigate(['/dashboard']);
   }
 }
