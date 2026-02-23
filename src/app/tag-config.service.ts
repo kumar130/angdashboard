@@ -18,9 +18,9 @@ export class TagConfigService {
 
   private csvPath = 'assets/tag-report.csv';
 
-  constructor(private http: HttpClient) {}
-
   private rules: TagRule[] = [];
+
+  constructor(private http: HttpClient) {}
 
   setRules(rules: TagRule[]) {
     this.rules = rules;
@@ -36,21 +36,70 @@ export class TagConfigService {
     );
   }
 
+  /**
+   * Robust CSV parser supporting quotes and commas inside values
+   */
   private parseCsv(csv: string): any[] {
-    const lines = csv.split('\n').filter(l => l.trim().length > 0);
 
-    const headers = lines[0].split(',').map(h => h.trim());
+    const lines = csv
+      .replace(/\r/g, '')
+      .split('\n')
+      .filter(l => l.trim().length > 0);
 
-    return lines.slice(1).map(line => {
-      const values = line.split(',');
+    if (lines.length === 0) return [];
+
+    const headers = this.parseLine(lines[0]).map(h => h.trim());
+
+    const rows: any[] = [];
+
+    for (let i = 1; i < lines.length; i++) {
+
+      const values = this.parseLine(lines[i]);
 
       const obj: any = {};
-      headers.forEach((header, i) => {
-        obj[header] = values[i] || '';
+
+      headers.forEach((header, index) => {
+        obj[header] = values[index] || '';
       });
 
-      return obj;
-    });
+      rows.push(obj);
+    }
+
+    console.log('CSV SAMPLE ROW:', rows[0]); // debug
+
+    return rows;
+  }
+
+  /**
+   * Parse single CSV line with quotes support
+   */
+  private parseLine(line: string): string[] {
+
+    const result: string[] = [];
+    let current = '';
+    let insideQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+
+      const char = line[i];
+
+      if (char === '"') {
+        insideQuotes = !insideQuotes;
+        continue;
+      }
+
+      if (char === ',' && !insideQuotes) {
+        result.push(current);
+        current = '';
+        continue;
+      }
+
+      current += char;
+    }
+
+    result.push(current);
+
+    return result.map(v => v.trim());
   }
 
   calculateCompliance(data: any[]): ResourceRecord[] {
@@ -68,11 +117,14 @@ export class TagConfigService {
 
       let compliant = true;
 
-      for (const rule of this.rules) {
-        const val = row[rule.key] || '';
-        if (!val || val !== rule.value) {
-          compliant = false;
-          break;
+      // If no rules configured → treat as compliant
+      if (this.rules.length > 0) {
+        for (const rule of this.rules) {
+          const val = row[rule.key] || '';
+          if (!val || val !== rule.value) {
+            compliant = false;
+            break;
+          }
         }
       }
 
