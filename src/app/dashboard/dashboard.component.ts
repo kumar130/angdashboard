@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TagConfigService } from '../tag-config.service';
+import { TagConfigService, ResourceRow } from '../tag-config.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -10,7 +10,8 @@ import { TagConfigService } from '../tag-config.service';
 })
 export class DashboardComponent implements OnInit {
 
-  resources: any[] = [];
+  resources: ResourceRow[] = [];
+
   compliant = 0;
   nonCompliant = 0;
 
@@ -26,7 +27,6 @@ export class DashboardComponent implements OnInit {
 
       this.compliant = result.filter(r => r.compliance === 'COMPLIANT').length;
       this.nonCompliant = result.filter(r => r.compliance === 'NON_COMPLIANT').length;
-
     });
   }
 }
