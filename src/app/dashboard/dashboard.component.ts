@@ -1,35 +1,38 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { TagConfigService, ResourceRecord } from '../tag-config.service';
+import { CsvService, ResourceRow } from '../services/csv.service';
 
 @Component({
   selector: 'app-dashboard',
-  standalone: true,
-  imports: [CommonModule],
   templateUrl: './dashboard.component.html'
 })
 export class DashboardComponent implements OnInit {
 
-  records: ResourceRecord[] = [];
+  resources: ResourceRow[] = [];
 
-  compliant = 0;
-  nonCompliant = 0;
+  compliantCount = 0;
+  nonCompliantCount = 0;
 
-  constructor(private service: TagConfigService) {}
+  requiredTags = ['Name', 'Environment']; // default policy
+
+  constructor(private csvService: CsvService) {}
 
   ngOnInit(): void {
+    this.loadCsv();
+  }
 
-    this.service.loadCsv().subscribe(data => {
+  loadCsv() {
 
-      const result = this.service.calculateCompliance(data);
+    fetch('/assets/tag-report.csv')
+      .then(r => r.text())
+      .then(text => {
 
-      this.records = result;
+        this.resources = this.csvService.parse(text, this.requiredTags);
 
-      this.compliant =
-        result.filter(r => r.compliance === 'COMPLIANT').length;
+        this.compliantCount =
+          this.resources.filter(r => r.compliant).length;
 
-      this.nonCompliant =
-        result.filter(r => r.compliance === 'NON_COMPLIANT').length;
-    });
+        this.nonCompliantCount =
+          this.resources.filter(r => !r.compliant).length;
+      });
   }
 }
