@@ -97,22 +97,24 @@ export class ReportComponent implements OnInit {
 
               required.forEach((t: any) => {
 
-                const actual =
-                  r[t.key] ||
-                  r[t.key?.toLowerCase()] ||
-                  r[t.key?.toUpperCase()] ||
-                  r['environment'] ||
-                  r['Environment'] ||
-                  r['env'] ||
-                  r['ghr:environment'];
+                const key = t.key.trim().toLowerCase();
+                const expected = t.value.trim().toLowerCase();
 
-                if ((actual || '').trim() !== t.value) {
+                // Find matching column dynamically (case insensitive)
+                const column = Object.keys(r).find(
+                  k => k.trim().toLowerCase() === key
+                );
+
+                const actual = column ? (r[column] || '').trim().toLowerCase() : '';
+
+                if (actual !== expected) {
                   failures.push({
                     key: t.key,
                     expected: t.value,
                     actual: actual || 'Missing'
                   });
                 }
+
               });
 
               if (failures.length > 0) {
