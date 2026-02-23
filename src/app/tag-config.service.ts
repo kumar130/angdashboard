@@ -7,107 +7,80 @@ export interface TagRule {
   value: string;
 }
 
-export interface ResourceResult {
-  accountId: string;
+export interface ResourceRecord {
   resourceId: string;
   resourceType: string;
   compliance: 'COMPLIANT' | 'NON_COMPLIANT';
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class TagConfigService {
 
-  private rules: TagRule[] = [];
+  private csvPath = 'assets/tag-report.csv';
 
   constructor(private http: HttpClient) {}
+
+  private rules: TagRule[] = [];
 
   setRules(rules: TagRule[]) {
     this.rules = rules;
   }
 
-  getRules(): TagRule[] {
+  getRules() {
     return this.rules;
   }
 
   loadCsv(): Observable<any[]> {
-    return this.http
-      .get('assets/tag-report.csv', { responseType: 'text' })
-      .pipe(map(text => this.parseCsv(text)));
+    return this.http.get(this.csvPath, { responseType: 'text' }).pipe(
+      map(text => this.parseCsv(text))
+    );
   }
 
-  private parseCsv(text: string): any[] {
+  private parseCsv(csv: string): any[] {
+    const lines = csv.split('\n').filter(l => l.trim().length > 0);
 
-    const lines = text.split('\n').filter(l => l.trim().length > 0);
     const headers = lines[0].split(',').map(h => h.trim());
 
-    const rows: any[] = [];
-
-    for (let i = 1; i < lines.length; i++) {
-
-      const cols = lines[i].split(',');
+    return lines.slice(1).map(line => {
+      const values = line.split(',');
 
       const obj: any = {};
-
-      headers.forEach((h, idx) => {
-        obj[h] = cols[idx] ? cols[idx].trim() : '';
+      headers.forEach((header, i) => {
+        obj[header] = values[i] || '';
       });
 
-      rows.push(obj);
-    }
-
-    return rows;
+      return obj;
+    });
   }
 
-  private extractResourceId(arn: string): string {
+  calculateCompliance(data: any[]): ResourceRecord[] {
 
-    if (!arn) return '';
+    return data.map(row => {
 
-    const parts = arn.split('/');
-    return parts[parts.length - 1] || arn;
-  }
+      const arn: string = row['ResourceArn'] || '';
 
-  calculateCompliance(resources: any[]): ResourceResult[] {
+      const resourceId =
+        arn.split('/').pop() ||
+        arn.split(':').pop() ||
+        'Unknown';
 
-    const results: ResourceResult[] = [];
-
-    for (const r of resources) {
+      const resourceType = row['ResourceType'] || 'Unknown';
 
       let compliant = true;
 
       for (const rule of this.rules) {
-
-        const key = rule.key.toLowerCase();
-        const value = rule.value.toLowerCase();
-
-        const columnName = Object.keys(r).find(
-          k => k.toLowerCase() === key
-        );
-
-        if (!columnName) {
-          compliant = false;
-          break;
-        }
-
-        const actualValue = (r[columnName] || '').toString().toLowerCase();
-
-        if (!actualValue.includes(value)) {
+        const val = row[rule.key] || '';
+        if (!val || val !== rule.value) {
           compliant = false;
           break;
         }
       }
 
-      const arn = r['ResourceArn'] || '';
-
-      results.push({
-        accountId: r['AccountId'] || '',
-        resourceId: this.extractResourceId(arn),
-        resourceType: r['ResourceType'] || 'UNKNOWN',
+      return {
+        resourceId,
+        resourceType,
         compliance: compliant ? 'COMPLIANT' : 'NON_COMPLIANT'
-      });
-    }
-
-    return results;
+      };
+    });
   }
 }

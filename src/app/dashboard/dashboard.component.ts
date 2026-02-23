@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-import { TagConfigService } from '../tag-config.service';
+import { TagConfigService, ResourceRecord } from '../tag-config.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -11,51 +10,26 @@ import { TagConfigService } from '../tag-config.service';
 })
 export class DashboardComponent implements OnInit {
 
-  results: any[] = [];
+  records: ResourceRecord[] = [];
 
   compliant = 0;
   nonCompliant = 0;
-
-  resourceSummary: any[] = [];
 
   constructor(private service: TagConfigService) {}
 
   ngOnInit(): void {
 
-    this.service.loadCsv().subscribe(resources => {
+    this.service.loadCsv().subscribe(data => {
 
-      const result = this.service.calculateCompliance(resources);
+      const result = this.service.calculateCompliance(data);
 
-      this.results = result;
+      this.records = result;
 
-      this.compliant = result.filter(r => r.compliance === 'COMPLIANT').length;
-      this.nonCompliant = result.filter(r => r.compliance === 'NON_COMPLIANT').length;
+      this.compliant =
+        result.filter(r => r.compliance === 'COMPLIANT').length;
 
-      this.buildSummary(result);
+      this.nonCompliant =
+        result.filter(r => r.compliance === 'NON_COMPLIANT').length;
     });
-  }
-
-  buildSummary(data: any[]) {
-
-    const map: any = {};
-
-    for (const r of data) {
-
-      if (!map[r.resourceType]) {
-        map[r.resourceType] = {
-          type: r.resourceType,
-          compliant: 0,
-          nonCompliant: 0
-        };
-      }
-
-      if (r.compliance === 'COMPLIANT') {
-        map[r.resourceType].compliant++;
-      } else {
-        map[r.resourceType].nonCompliant++;
-      }
-    }
-
-    this.resourceSummary = Object.values(map);
   }
 }

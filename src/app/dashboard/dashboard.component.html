@@ -1,44 +1,32 @@
 <h2>Compliance Dashboard</h2>
 
 <div>
-    <strong>Compliant:</strong> {{ compliant }} <br>
+    <strong>Compliant:</strong> {{ compliant }}
+</div>
+
+<div>
     <strong>Non-Compliant:</strong> {{ nonCompliant }}
 </div>
 
 <br>
 
-<h3>Resource Type Summary</h3>
-
 <table border="1" cellpadding="6">
+    <thead>
     <tr>
-        <th>Type</th>
-        <th>Compliant</th>
-        <th>Non-Compliant</th>
-    </tr>
-
-    <tr *ngFor="let r of resourceSummary">
-        <td>{{ r.type }}</td>
-        <td>{{ r.compliant }}</td>
-        <td>{{ r.nonCompliant }}</td>
-    </tr>
-</table>
-
-<br>
-
-<h3>Resources</h3>
-
-<table border="1" cellpadding="6">
-    <tr>
-        <th>Account</th>
-        <th>Type</th>
         <th>Resource ID</th>
+        <th>Resource Type</th>
         <th>Status</th>
     </tr>
+    </thead>
 
-    <tr *ngFor="let r of results">
-        <td>{{ r.accountId }}</td>
-        <td>{{ r.resourceType }}</td>
+    <tbody>
+    <tr *ngFor="let r of records">
         <td>{{ r.resourceId }}</td>
-        <td>{{ r.compliance }}</td>
+        <td>{{ r.resourceType }}</td>
+        <td>
+            <span *ngIf="r.compliance === 'COMPLIANT'">✅ Compliant</span>
+            <span *ngIf="r.compliance === 'NON_COMPLIANT'">❌ Non-Compliant</span>
+        </td>
     </tr>
+    </tbody>
 </table>
