@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import * as Papa from 'papaparse';
 
 @Component({
@@ -8,8 +9,6 @@ import * as Papa from 'papaparse';
   <div style="padding:20px">
 
     <h2>AWS Tagging Compliance Dashboard</h2>
-
-    <input type="file" (change)="onFileUpload($event)" accept=".csv"/>
 
     <h3 style="margin-top:20px">Configure Tags</h3>
 
@@ -79,12 +78,35 @@ import * as Papa from 'papaparse';
   </div>
   `
 })
-export class ReportComponent {
+export class ReportComponent implements OnInit {
+
+  private http = inject(HttpClient);
 
   rows: any[] = [];
   requiredTags: any[] = [{ key: '', value: '' }];
   groupedResults: any[] = [];
   summary: any;
+
+  ngOnInit() {
+
+    this.http
+      .get('assets/tag-report.csv', { responseType: 'text' })
+      .subscribe(csv => {
+
+        Papa.parse(csv, {
+          header: true,
+          skipEmptyLines: true,
+          delimiter: '', // auto detect (tab or comma)
+          transformHeader: (h: string) =>
+            h.trim().toLowerCase(),
+          complete: (result) => {
+            this.rows = result.data;
+          }
+        });
+
+      });
+
+  }
 
   addTag() {
     this.requiredTags.push({ key: '', value: '' });
@@ -92,23 +114,6 @@ export class ReportComponent {
 
   removeTag(index: number) {
     this.requiredTags.splice(index, 1);
-  }
-
-  onFileUpload(event: any) {
-
-    const file = event.target.files[0];
-
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      delimiter: '',
-      transformHeader: (header: string) =>
-        header.trim().toLowerCase(),
-      complete: (result) => {
-        this.rows = result.data;
-      }
-    });
-
   }
 
   generateReport() {
@@ -122,7 +127,7 @@ export class ReportComponent {
     this.rows.forEach((r: any) => {
 
       const resourceType =
-        (r['resourcetype'] || 'Unknown').trim();
+        (r['resourcetype'] || 'Unknown').toString().trim();
 
       const resourceName =
         r['name']?.trim() ||
