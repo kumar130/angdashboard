@@ -1,68 +1,71 @@
-import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { CommonModule } from '@angular/common';
+import { Component } from '@angular/core';
 import * as Papa from 'papaparse';
 
 @Component({
-  standalone: true,
   selector: 'app-report',
-  imports: [CommonModule],
+  standalone: true,
   template: `
-    <h2>Compliance Report</h2>
+  <div style="padding:20px">
 
-    <!-- OVERALL SUMMARY -->
-    <div style="padding:15px; border:1px solid #ccc; margin-bottom:20px;">
-      <h3>Overall Summary</h3>
-      <p><strong>Total Resources:</strong> {{ total }}</p>
-      <p><strong>Compliant:</strong> {{ passed }}</p>
-      <p><strong>Non-Compliant:</strong> {{ failedCount }}</p>
-      <p><strong>Compliance %:</strong> {{ overallPercentage }}%</p>
+    <h2>AWS Tagging Compliance Dashboard</h2>
+
+    <input type="file" (change)="onFileUpload($event)" accept=".csv"/>
+
+    <h3 style="margin-top:20px">Configure Tags</h3>
+
+    <div *ngFor="let tag of requiredTags; let i = index" style="margin-bottom:10px">
+      <input placeholder="Key"
+             [(ngModel)]="tag.key"
+             style="margin-right:10px"/>
+      <input placeholder="Value (comma separated)"
+             [(ngModel)]="tag.value"
+             style="margin-right:10px"/>
+      <button (click)="removeTag(i)">Remove</button>
     </div>
 
-    <!-- RESOURCE TYPES -->
-    <div *ngFor="let type of typeStats | keyvalue">
+    <button (click)="addTag()">Add Tag</button>
+    <button (click)="generateReport()" style="margin-left:10px">
+      Generate Report
+    </button>
 
-      <!-- Type Header -->
-      <div
-        style="cursor:pointer; padding:10px; border:1px solid #ddd; margin-bottom:5px; background:#f5f5f5;"
-        (click)="toggleType(type.key)"
-      >
-        <strong>
-          {{ expandedTypes[type.key] ? '▼' : '▶' }}
-          {{ type.key }}
-        </strong>
+    <div *ngIf="summary" style="margin-top:30px">
+      <h3>Overall Summary</h3>
+      <p>Total Resources: {{summary.total}}</p>
+      <p>Compliant: {{summary.compliant}}</p>
+      <p>Non-Compliant: {{summary.nonCompliant}}</p>
+      <p><b>Compliance %: {{summary.percentage}}%</b></p>
+    </div>
 
-        (Total: {{ type.value.total }},
-         Failed: {{ type.value.failed }},
-         {{ type.value.percentage }}%)
-      </div>
+    <div *ngFor="let group of groupedResults" style="margin-top:20px">
 
-      <!-- Expanded Type Section -->
-      <div *ngIf="expandedTypes[type.key]" style="padding-left:20px;">
+      <h3 (click)="group.expanded = !group.expanded"
+          style="cursor:pointer">
+        {{group.type}}
+        (Total: {{group.total}},
+         Failed: {{group.failed}},
+         {{group.percentage}}%)
+      </h3>
 
-        <div *ngIf="failed[type.key]">
+      <div *ngIf="group.expanded">
 
-          <div *ngFor="let r of failed[type.key]">
+        <div *ngFor="let res of group.resources"
+             style="margin-left:20px;margin-bottom:10px">
 
-            <!-- Resource Header -->
-            <div
-              style="cursor:pointer; margin:5px 0;"
-              (click)="toggleResource(type.key, r.displayName)"
-            >
-              <strong>
-                {{ isResourceExpanded(type.key, r.displayName) ? '▼' : '▶' }}
-                {{ r.displayName }}
-              </strong>
+          <div *ngIf="res.failures.length > 0">
+
+            <div (click)="res.expanded = !res.expanded"
+                 style="cursor:pointer">
+              ▼ {{res.name}}
             </div>
 
-            <!-- Expanded Resource Failures -->
-            <div
-              *ngIf="isResourceExpanded(type.key, r.displayName)"
-              style="padding-left:20px;"
-            >
-              <div *ngFor="let f of r.failures">
-                - {{ f.key }} expected {{ f.expected }}, actual {{ f.actual }}
+            <div *ngIf="res.expanded"
+                 style="margin-left:20px;color:red">
+
+              <div *ngFor="let f of res.failures">
+                - {{f.key}} expected {{f.expected}},
+                  actual {{f.actual}}
               </div>
+
             </div>
 
           </div>
@@ -72,148 +75,140 @@ import * as Papa from 'papaparse';
       </div>
 
     </div>
+
+  </div>
   `
 })
-export class ReportComponent implements OnInit {
+export class ReportComponent {
 
-  failed: any = {};
-  typeStats: any = {};
+  rows: any[] = [];
+  requiredTags: any[] = [{ key: '', value: '' }];
+  groupedResults: any[] = [];
+  summary: any;
 
-  total = 0;
-  passed = 0;
-  failedCount = 0;
-  overallPercentage = 0;
+  addTag() {
+    this.requiredTags.push({ key: '', value: '' });
+  }
 
-  expandedTypes: any = {};
-  expandedResources: any = {};
+  removeTag(index: number) {
+    this.requiredTags.splice(index, 1);
+  }
 
-  constructor(private http: HttpClient) {}
+  onFileUpload(event: any) {
 
-  ngOnInit() {
+    const file = event.target.files[0];
 
-    const required = JSON.parse(localStorage.getItem('requiredTags') || '[]');
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      delimiter: '',
+      transformHeader: (header: string) =>
+        header.trim().toLowerCase(),
+      complete: (result) => {
+        this.rows = result.data;
+      }
+    });
 
-    this.http.get('assets/tag-report.csv', { responseType: 'text' })
-      .subscribe(data => {
+  }
 
-        Papa.parse(data, {
-          header: true,
-          skipEmptyLines: true,
-          complete: (res: any) => {
+  generateReport() {
 
-            const rows = res.data;
-            this.total = rows.length;
+    if (!this.rows.length) return;
 
-            rows.forEach((r: any) => {
+    const groups: any = {};
+    let totalResources = 0;
+    let totalCompliant = 0;
 
-              const type = r['ResourceType']?.trim() || 'Unknown';
+    this.rows.forEach((r: any) => {
 
-              if (!this.typeStats[type]) {
-                this.typeStats[type] = {
-                  total: 0,
-                  passed: 0,
-                  failed: 0,
-                  percentage: 0
-                };
-              }
+      const resourceType =
+        (r['resourcetype'] || 'Unknown').trim();
 
-              this.typeStats[type].total++;
+      const resourceName =
+        r['name']?.trim() ||
+        r['resourcearn']?.split('/').pop() ||
+        'Unknown';
 
-              // Friendly display name
-              let displayName = r['Name'];
-              if (!displayName && r['ResourceArn']) {
-                const parts = r['ResourceArn'].split('/');
-                displayName = parts[parts.length - 1];
-              }
+      const failures: any[] = [];
 
-              let failures: any[] = [];
+      this.requiredTags.forEach((t: any) => {
 
-              required.forEach((t: any) => {
+        if (!t.key || !t.value) return;
 
-                const key = t.key.trim().toLowerCase();
+        const key = t.key.trim().toLowerCase();
 
-                // 👇 Split multiple values by comma
-                const allowedValues = t.value
-                  .split(',')
-                  .map((v: string) => v.trim().toLowerCase())
-                  .filter((v: string) => v.length > 0);
+        const expectedValues = t.value
+          .split(',')
+          .map((v: string) =>
+            v.trim().toLowerCase()
+          );
 
-                // Find column case-insensitively
-                const column = Object.keys(r).find(
-                  k => k.trim().toLowerCase() === key
-                );
+        const actual = (r[key] || '')
+          .toString()
+          .trim()
+          .toLowerCase();
 
-                const actual = column
-                  ? (r[column] || '').trim().toLowerCase()
-                  : '';
-
-                // If actual NOT in allowed values → fail
-                if (!allowedValues.includes(actual)) {
-                  failures.push({
-                    key: t.key,
-                    expected: t.value,
-                    actual: actual || 'Missing'
-                  });
-                }
-
-              });
-
-              if (failures.length > 0) {
-
-                this.failedCount++;
-                this.typeStats[type].failed++;
-
-                if (!this.failed[type]) {
-                  this.failed[type] = [];
-                }
-
-                this.failed[type].push({
-                  displayName,
-                  failures
-                });
-
-              } else {
-
-                this.passed++;
-                this.typeStats[type].passed++;
-              }
-            });
-
-            // Overall %
-            this.overallPercentage =
-              this.total > 0
-                ? Math.round((this.passed / this.total) * 100)
-                : 0;
-
-            // Per Type %
-            Object.keys(this.typeStats).forEach(type => {
-              const stats = this.typeStats[type];
-              stats.percentage =
-                stats.total > 0
-                  ? Math.round((stats.passed / stats.total) * 100)
-                  : 0;
-            });
-
-          }
-        });
+        if (!expectedValues.includes(actual)) {
+          failures.push({
+            key: t.key,
+            expected: t.value,
+            actual: actual || 'Missing'
+          });
+        }
 
       });
-  }
 
-  toggleType(type: string) {
-    this.expandedTypes[type] = !this.expandedTypes[type];
-  }
+      if (!groups[resourceType]) {
+        groups[resourceType] = {
+          type: resourceType,
+          resources: [],
+          total: 0,
+          failed: 0,
+          compliant: 0,
+          percentage: 0,
+          expanded: false
+        };
+      }
 
-  toggleResource(type: string, name: string) {
-    if (!this.expandedResources[type]) {
-      this.expandedResources[type] = {};
-    }
-    this.expandedResources[type][name] =
-      !this.expandedResources[type][name];
-  }
+      groups[resourceType].total++;
+      totalResources++;
 
-  isResourceExpanded(type: string, name: string): boolean {
-    return this.expandedResources[type]?.[name];
+      if (failures.length === 0) {
+        groups[resourceType].compliant++;
+        totalCompliant++;
+      } else {
+        groups[resourceType].failed++;
+      }
+
+      groups[resourceType].resources.push({
+        name: resourceName,
+        failures: failures,
+        expanded: false
+      });
+
+    });
+
+    Object.values(groups).forEach((g: any) => {
+      g.percentage =
+        g.total === 0
+          ? 0
+          : Math.round((g.compliant / g.total) * 100);
+    });
+
+    this.groupedResults = Object.values(groups);
+
+    this.summary = {
+      total: totalResources,
+      compliant: totalCompliant,
+      nonCompliant: totalResources - totalCompliant,
+      percentage:
+        totalResources === 0
+          ? 0
+          : Math.round(
+              (totalCompliant / totalResources) * 100
+            )
+    };
+
   }
 
 }
