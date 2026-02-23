@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { TagConfigService } from '../services/tag-config.service';
 import { CommonModule } from '@angular/common';
-import { TagConfigService } from '../tag-config.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -8,12 +8,16 @@ import { TagConfigService } from '../tag-config.service';
   imports: [CommonModule],
   templateUrl: './dashboard.component.html'
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
 
   rules: any[] = [];
 
-  constructor(private configService: TagConfigService) {
-    this.rules = this.configService.getRules();
-  }
+  constructor(private configService: TagConfigService) {}
 
+  ngOnInit() {
+
+    this.rules = this.configService.getRules();
+
+    console.log('Rules:', this.rules);
+  }
 }

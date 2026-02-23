@@ -1,9 +1,17 @@
 <div class="container">
 
-    <h2>Dashboard</h2>
+    <h2>Compliance Results</h2>
+
+    <div *ngIf="!rules.length">
+        No rules configured
+    </div>
 
     <div *ngFor="let r of rules">
-        {{ r.key }} : {{ r.value }}
+
+        <h3>{{ r.key }}</h3>
+
+        <p>Allowed Values: {{ r.values.join(', ') }}</p>
+
     </div>
 
 </div>

@@ -14,5 +14,4 @@ export class TagConfigService {
   getRules() {
     return this.rules;
   }
-
 }
