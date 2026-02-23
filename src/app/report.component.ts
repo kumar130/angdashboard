@@ -131,8 +131,14 @@ export class ReportComponent implements OnInit {
               required.forEach((t: any) => {
 
                 const key = t.key.trim().toLowerCase();
-                const expected = t.value.trim().toLowerCase();
 
+                // 👇 Split multiple values by comma
+                const allowedValues = t.value
+                  .split(',')
+                  .map((v: string) => v.trim().toLowerCase())
+                  .filter((v: string) => v.length > 0);
+
+                // Find column case-insensitively
                 const column = Object.keys(r).find(
                   k => k.trim().toLowerCase() === key
                 );
@@ -141,7 +147,8 @@ export class ReportComponent implements OnInit {
                   ? (r[column] || '').trim().toLowerCase()
                   : '';
 
-                if (actual !== expected) {
+                // If actual NOT in allowed values → fail
+                if (!allowedValues.includes(actual)) {
                   failures.push({
                     key: t.key,
                     expected: t.value,
