@@ -1,6 +1,6 @@
 {
   "name": "aws-tagging-dashboard",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "private": true,
   "scripts": {
     "start": "ng serve",
@@ -15,8 +15,13 @@
     "@angular/platform-browser": "^17.0.0",
     "@angular/platform-browser-dynamic": "^17.0.0",
     "@angular/router": "^17.0.0",
-    "papaparse": "^5.4.1",
     "rxjs": "~7.8.0",
-    "zone.js": "~0.14.0"
+    "zone.js": "~0.14.0",
+    "papaparse": "^5.4.1"
+  },
+  "devDependencies": {
+    "@angular/cli": "^17.0.0",
+    "@angular/compiler-cli": "^17.0.0",
+    "typescript": "~5.2.0"
   }
 }
