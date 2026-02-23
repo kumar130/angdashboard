@@ -1,44 +1,25 @@
-<div class="container">
+<div style="padding:20px">
 
-    <!-- STEP 1 -->
-    <div *ngIf="step === 1">
-        <h1>Welcome</h1>
-        <button (click)="getStarted()">Get Started</button>
-    </div>
+    <h1>Compliance Dashboard</h1>
 
-    <!-- STEP 2 -->
-    <div *ngIf="step === 2">
-        <h2>Configuration</h2>
-        <button (click)="configureTagPolicy()">Configure Tag Policy</button>
-    </div>
+    <h2>Compliant: {{ compliant }}</h2>
+    <h2>Non-Compliant: {{ nonCompliant }}</h2>
 
-    <!-- STEP 3 -->
-    <div *ngIf="step === 3">
+    <table border="1" cellpadding="8" style="margin-top:20px">
+        <tr>
+            <th>Resource ID</th>
+            <th>Resource Type</th>
+            <th>Status</th>
+        </tr>
 
-        <h2>Tag Policy</h2>
-
-        <input
-                type="text"
-                placeholder="Tag Key"
-                [(ngModel)]="tagKey"
-        />
-
-        <input
-                type="text"
-                placeholder="Tag Value Rule"
-                [(ngModel)]="tagValue"
-        />
-
-        <button (click)="addRule()">Add Rule</button>
-
-        <div *ngIf="rules.length > 0">
-            <h3>Rules</h3>
-
-            <div *ngFor="let rule of rules">
-                {{ rule.key }} : {{ rule.value }}
-            </div>
-        </div>
-
-    </div>
+        <tr *ngFor="let r of resources">
+            <td>{{ r.resourceId }}</td>
+            <td>{{ r.resourceType }}</td>
+            <td>
+                <span *ngIf="r.compliant">✅ Compliant</span>
+                <span *ngIf="!r.compliant">❌ Non-Compliant</span>
+            </td>
+        </tr>
+    </table>
 
 </div>
