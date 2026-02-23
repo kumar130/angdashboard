@@ -1,10 +1,43 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+
+interface TagRule {
+  key: string;
+  value: string;
+}
 
 @Component({
   selector: 'app-root',
-  standalone: true,
-  imports: [RouterOutlet],   // ⭐ THIS LINE FIXES ERROR
-  template: `<router-outlet></router-outlet>`
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
 })
-export class AppComponent {}
+export class AppComponent {
+
+  step = 1;
+
+  tagKey = '';
+  tagValue = '';
+
+  rules: TagRule[] = [];
+
+  // Step navigation
+  getStarted() {
+    this.step = 2;
+  }
+
+  configureTagPolicy() {
+    this.step = 3;
+  }
+
+  addRule() {
+    if (!this.tagKey || !this.tagValue) return;
+
+    this.rules.push({
+      key: this.tagKey,
+      value: this.tagValue
+    });
+
+    // reset fields
+    this.tagKey = '';
+    this.tagValue = '';
+  }
+}
