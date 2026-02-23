@@ -42,7 +42,7 @@ export class ReportComponent implements OnInit {
 
     const required = JSON.parse(localStorage.getItem('requiredTags') || '[]');
 
-    this.http.get('assets/sample.csv', { responseType: 'text' })
+    this.http.get('assets/tag-report.csv', { responseType: 'text' })
       .subscribe(data => {
 
         Papa.parse(data, {
