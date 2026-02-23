@@ -1,0 +1,10 @@
+
+<h2>Configure Required Tags</h2>
+<div *ngFor="let tag of tags">
+  <input [(ngModel)]="tag.key" placeholder="Tag Key" />
+  =
+  <input [(ngModel)]="tag.value" placeholder="Tag Value" />
+</div>
+<button (click)="addTag()">Add Tag</button>
+<br><br>
+<button (click)="generate()">Generate Report</button>
