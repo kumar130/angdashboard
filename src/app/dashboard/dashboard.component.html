@@ -1,27 +1,37 @@
 <div class="container">
 
-    <h2>Compliance Results</h2>
+    <h2>Compliance Dashboard</h2>
 
-    <div *ngIf="!results.length">
-        No data available
+    <div class="stats">
+        <div>Total: {{total}}</div>
+        <div>Compliant: {{compliant}}</div>
+        <div>Non-Compliant: {{nonCompliant}}</div>
     </div>
 
-    <div *ngFor="let r of results" class="card">
+    <table>
+        <thead>
+        <tr>
+            <th>Account</th>
+            <th>Region</th>
+            <th>Service</th>
+            <th>Name</th>
+            <th>Product</th>
+            <th>Environment</th>
+            <th>Compliance</th>
+        </tr>
+        </thead>
 
-        <h3>{{ r.key }}</h3>
-
-        <h1>{{ r.percent }}%</h1>
-
-        <div *ngIf="r.failures.length">
-
-            <h4>Failures</h4>
-
-            <div *ngFor="let f of r.failures">
-                {{ f.resource }} → {{ f.actual }}
-            </div>
-
-        </div>
-
-    </div>
+        <tbody>
+        <tr *ngFor="let r of data">
+            <td>{{r.accountId}}</td>
+            <td>{{r.region}}</td>
+            <td>{{r.service}}</td>
+            <td>{{r.name}}</td>
+            <td>{{r.product}}</td>
+            <td>{{r.environment}}</td>
+            <td>{{r.compliance}}</td>
+        </tr>
+        </tbody>
+    </table>
 
 </div>

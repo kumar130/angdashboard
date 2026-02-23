@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TagConfigService } from '../services/tag-config.service';
+import { TagConfigService } from '../tag-config.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -10,83 +10,25 @@ import { TagConfigService } from '../services/tag-config.service';
 })
 export class DashboardComponent implements OnInit {
 
-  rules: any[] = [];
-  results: any[] = [];
+  data: any[] = [];
 
-  constructor(private configService: TagConfigService) {}
+  total = 0;
+  compliant = 0;
+  nonCompliant = 0;
 
-  async ngOnInit() {
+  constructor(private service: TagConfigService) {}
 
-    this.rules = this.configService.getRules();
+  ngOnInit() {
 
-    if (!this.rules.length) return;
+    this.service.loadCsv().subscribe(resources => {
 
-    const response = await fetch('assets/tag-report.csv');
-    const text = await response.text();
+      const result = this.service.calculateCompliance(resources);
 
-    this.processCSV(text);
-  }
+      this.data = result;
 
-  processCSV(csv: string) {
-
-    const lines = csv.split('\n');
-    const headers = lines[0].split(',');
-
-    const rows = lines.slice(1).map(line => line.split(','));
-
-    this.rules.forEach(rule => {
-
-      const keyIndex = headers.findIndex(h =>
-        h.toLowerCase().includes(rule.key.toLowerCase())
-      );
-
-      if (keyIndex === -1) return;
-
-      let compliant = 0;
-      let total = 0;
-      let failures: any[] = [];
-
-      rows.forEach(row => {
-
-        if (!row.length) return;
-
-        total++;
-
-        const value = row[keyIndex]?.trim();
-
-        if (rule.values.includes(value)) {
-          compliant++;
-        } else {
-
-          failures.push({
-            resource: this.extractName(row[0]),
-            actual: value || 'MISSING'
-          });
-
-        }
-
-      });
-
-      const percent = total
-        ? Math.round((compliant / total) * 100)
-        : 0;
-
-      this.results.push({
-        key: rule.key,
-        percent,
-        failures
-      });
-
+      this.total = result.length;
+      this.compliant = result.filter(r => r.compliance === 'COMPLIANT').length;
+      this.nonCompliant = result.filter(r => r.compliance === 'NON_COMPLIANT').length;
     });
-
   }
-
-  extractName(arn: string) {
-
-    if (!arn) return 'UNKNOWN';
-
-    const parts = arn.split('/');
-    return parts[parts.length - 1];
-  }
-
 }
