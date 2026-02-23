@@ -2,15 +2,25 @@
 
     <h2>Compliance Results</h2>
 
-    <div *ngIf="!rules.length">
-        No rules configured
+    <div *ngIf="!results.length">
+        No data available
     </div>
 
-    <div *ngFor="let r of rules">
+    <div *ngFor="let r of results" class="card">
 
         <h3>{{ r.key }}</h3>
 
-        <p>Allowed Values: {{ r.values.join(', ') }}</p>
+        <h1>{{ r.percent }}%</h1>
+
+        <div *ngIf="r.failures.length">
+
+            <h4>Failures</h4>
+
+            <div *ngFor="let f of r.failures">
+                {{ f.resource }} → {{ f.actual }}
+            </div>
+
+        </div>
 
     </div>
 
