@@ -2,9 +2,16 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
-export interface Resource {
+export interface TagRule {
+  key: string;
+  value: string;
+}
+
+export interface ResourceResult {
   accountId: string;
-  tags: Record<string, string>;
+  resourceId: string;
+  resourceType: string;
+  compliance: 'COMPLIANT' | 'NON_COMPLIANT';
 }
 
 @Injectable({
@@ -12,75 +19,95 @@ export interface Resource {
 })
 export class TagConfigService {
 
-  requiredTags: Record<string, string> = {};
+  private rules: TagRule[] = [];
 
   constructor(private http: HttpClient) {}
 
-  setRequiredTags(tags: Record<string, string>) {
-    this.requiredTags = tags;
+  setRules(rules: TagRule[]) {
+    this.rules = rules;
   }
 
-  loadCsv(): Observable<Resource[]> {
+  getRules(): TagRule[] {
+    return this.rules;
+  }
 
+  loadCsv(): Observable<any[]> {
     return this.http
       .get('assets/tag-report.csv', { responseType: 'text' })
-      .pipe(map(csv => this.parseCsv(csv)));
+      .pipe(map(text => this.parseCsv(text)));
   }
 
-  private parseCsv(csv: string): Resource[] {
+  private parseCsv(text: string): any[] {
 
-    const lines = csv.split('\n');
-    const header = lines[0].split(',');
+    const lines = text.split('\n').filter(l => l.trim().length > 0);
+    const headers = lines[0].split(',').map(h => h.trim());
 
-    const resources: Resource[] = [];
+    const rows: any[] = [];
 
     for (let i = 1; i < lines.length; i++) {
 
-      if (!lines[i].trim()) continue;
-
-      const values = lines[i].split(',');
+      const cols = lines[i].split(',');
 
       const obj: any = {};
 
-      header.forEach((h, idx) => {
-        obj[h.trim()] = values[idx]?.trim();
+      headers.forEach((h, idx) => {
+        obj[h] = cols[idx] ? cols[idx].trim() : '';
       });
 
-      const tags: Record<string, string> = {};
-
-      Object.keys(obj).forEach(key => {
-        if (key.startsWith('tag:')) {
-          tags[key.replace('tag:', '')] = obj[key];
-        }
-      });
-
-      resources.push({
-        accountId: obj['accountId'] || obj['AccountId'],
-        tags
-      });
+      rows.push(obj);
     }
 
-    return resources;
+    return rows;
   }
 
-  calculateCompliance(resources: Resource[]) {
+  private extractResourceId(arn: string): string {
 
-    return resources.map(r => {
+    if (!arn) return '';
+
+    const parts = arn.split('/');
+    return parts[parts.length - 1] || arn;
+  }
+
+  calculateCompliance(resources: any[]): ResourceResult[] {
+
+    const results: ResourceResult[] = [];
+
+    for (const r of resources) {
 
       let compliant = true;
 
-      for (const key of Object.keys(this.requiredTags)) {
+      for (const rule of this.rules) {
 
-        if (r.tags[key] !== this.requiredTags[key]) {
+        const key = rule.key.toLowerCase();
+        const value = rule.value.toLowerCase();
+
+        const columnName = Object.keys(r).find(
+          k => k.toLowerCase() === key
+        );
+
+        if (!columnName) {
+          compliant = false;
+          break;
+        }
+
+        const actualValue = (r[columnName] || '').toString().toLowerCase();
+
+        if (!actualValue.includes(value)) {
           compliant = false;
           break;
         }
       }
 
-      return {
-        ...r,
+      const arn = r['ResourceArn'] || '';
+
+      results.push({
+        accountId: r['AccountId'] || '',
+        resourceId: this.extractResourceId(arn),
+        resourceType: r['ResourceType'] || 'UNKNOWN',
         compliance: compliant ? 'COMPLIANT' : 'NON_COMPLIANT'
-      };
-    });
+      });
+    }
+
+    return results;
   }
 }
