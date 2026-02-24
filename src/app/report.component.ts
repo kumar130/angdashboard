@@ -1,10 +1,13 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import * as Papa from 'papaparse';
 
 @Component({
   selector: 'app-report',
   standalone: true,
+  imports: [CommonModule, FormsModule],
   template: `
   <div style="padding:20px">
 
@@ -96,7 +99,7 @@ export class ReportComponent implements OnInit {
         Papa.parse(csv, {
           header: true,
           skipEmptyLines: true,
-          delimiter: '', // auto detect (tab or comma)
+          delimiter: '',
           transformHeader: (h: string) =>
             h.trim().toLowerCase(),
           complete: (result) => {
@@ -144,9 +147,7 @@ export class ReportComponent implements OnInit {
 
         const expectedValues = t.value
           .split(',')
-          .map((v: string) =>
-            v.trim().toLowerCase()
-          );
+          .map((v: string) => v.trim().toLowerCase());
 
         const actual = (r[key] || '')
           .toString()
@@ -209,9 +210,7 @@ export class ReportComponent implements OnInit {
       percentage:
         totalResources === 0
           ? 0
-          : Math.round(
-              (totalCompliant / totalResources) * 100
-            )
+          : Math.round((totalCompliant / totalResources) * 100)
     };
 
   }
