@@ -119,100 +119,26 @@ export class ReportComponent implements OnInit {
     this.requiredTags.splice(index, 1);
   }
 
-  generateReport() {
+  this.requiredTags.forEach((t: any) => {
 
-    if (!this.rows.length) return;
+    if (!t.key || !t.value) return;
 
-    const groups: any = {};
-    let totalResources = 0;
-    let totalCompliant = 0;
+    const key = t.key; // DO NOT lowercase
+    const expectedValues = t.value
+      .split(',')
+      .map((v: string) => v.trim());
 
-    this.rows.forEach((r: any) => {
+    // STRICT: exact column match only
+    const actual = r[key];
 
-      const resourceType =
-        (r['resourcetype'] || 'Unknown').toString().trim();
-
-      const resourceName =
-        r['name']?.trim() ||
-        r['resourcearn']?.split('/').pop() ||
-        'Unknown';
-
-      const failures: any[] = [];
-
-      this.requiredTags.forEach((t: any) => {
-
-        if (!t.key || !t.value) return;
-
-        const key = t.key.trim().toLowerCase();
-
-        const expectedValues = t.value
-          .split(',')
-          .map((v: string) => v.trim().toLowerCase());
-
-        const actual = (r[key] || '')
-          .toString()
-          .trim()
-          .toLowerCase();
-
-        if (!expectedValues.includes(actual)) {
-          failures.push({
-            key: t.key,
-            expected: t.value,
-            actual: actual || 'Missing'
-          });
-        }
-
+    if (!actual || !expectedValues.includes(actual)) {
+      failures.push({
+        key: key,
+        expected: t.value,
+        actual: actual ? actual : 'Missing'
       });
+    }
 
-      if (!groups[resourceType]) {
-        groups[resourceType] = {
-          type: resourceType,
-          resources: [],
-          total: 0,
-          failed: 0,
-          compliant: 0,
-          percentage: 0,
-          expanded: false
-        };
-      }
-
-      groups[resourceType].total++;
-      totalResources++;
-
-      if (failures.length === 0) {
-        groups[resourceType].compliant++;
-        totalCompliant++;
-      } else {
-        groups[resourceType].failed++;
-      }
-
-      groups[resourceType].resources.push({
-        name: resourceName,
-        failures: failures,
-        expanded: false
-      });
-
-    });
-
-    Object.values(groups).forEach((g: any) => {
-      g.percentage =
-        g.total === 0
-          ? 0
-          : Math.round((g.compliant / g.total) * 100);
-    });
-
-    this.groupedResults = Object.values(groups);
-
-    this.summary = {
-      total: totalResources,
-      compliant: totalCompliant,
-      nonCompliant: totalResources - totalCompliant,
-      percentage:
-        totalResources === 0
-          ? 0
-          : Math.round((totalCompliant / totalResources) * 100)
-    };
-
-  }
+  });
 
 }
