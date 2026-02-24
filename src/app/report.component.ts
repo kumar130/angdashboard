@@ -91,24 +91,17 @@ export class ReportComponent implements OnInit {
   summary: any;
 
   ngOnInit() {
-
     this.http
       .get('assets/tag-report.csv', { responseType: 'text' })
       .subscribe(csv => {
-
         Papa.parse(csv, {
           header: true,
           skipEmptyLines: true,
-          delimiter: '',
-          transformHeader: (h: string) =>
-            h.trim().toLowerCase(),
           complete: (result) => {
-            this.rows = result.data;
+            this.rows = result.data as any[];
           }
         });
-
       });
-
   }
 
   addTag() {
@@ -119,26 +112,96 @@ export class ReportComponent implements OnInit {
     this.requiredTags.splice(index, 1);
   }
 
-  this.requiredTags.forEach((t: any) => {
+  generateReport() {
 
-    if (!t.key || !t.value) return;
+    if (!this.rows.length) return;
 
-    const key = t.key; // DO NOT lowercase
-    const expectedValues = t.value
-      .split(',')
-      .map((v: string) => v.trim());
+    const groups: any = {};
+    let totalResources = 0;
+    let totalCompliant = 0;
 
-    // STRICT: exact column match only
-    const actual = r[key];
+    this.rows.forEach((r: any) => {
 
-    if (!actual || !expectedValues.includes(actual)) {
-      failures.push({
-        key: key,
-        expected: t.value,
-        actual: actual ? actual : 'Missing'
+      const resourceType =
+        (r['ResourceType'] || 'Unknown').toString().trim();
+
+      const resourceName =
+        r['Name']?.trim() ||
+        r['ResourceArn']?.split('/').pop() ||
+        'Unknown';
+
+      const failures: any[] = [];
+
+      this.requiredTags.forEach((t: any) => {
+
+        if (!t.key || !t.value) return;
+
+        const key = t.key; // STRICT CASE-SENSITIVE MATCH
+        const expectedValues = t.value
+          .split(',')
+          .map((v: string) => v.trim());
+
+        const actual = r[key];
+
+        if (!actual || !expectedValues.includes(actual)) {
+          failures.push({
+            key: key,
+            expected: t.value,
+            actual: actual ? actual : 'Missing'
+          });
+        }
+
       });
-    }
 
-  });
+      if (!groups[resourceType]) {
+        groups[resourceType] = {
+          type: resourceType,
+          resources: [],
+          total: 0,
+          failed: 0,
+          compliant: 0,
+          percentage: 0,
+          expanded: false
+        };
+      }
+
+      groups[resourceType].total++;
+      totalResources++;
+
+      if (failures.length === 0) {
+        groups[resourceType].compliant++;
+        totalCompliant++;
+      } else {
+        groups[resourceType].failed++;
+      }
+
+      groups[resourceType].resources.push({
+        name: resourceName,
+        failures: failures,
+        expanded: false
+      });
+
+    });
+
+    Object.values(groups).forEach((g: any) => {
+      g.percentage =
+        g.total === 0
+          ? 0
+          : Math.round((g.compliant / g.total) * 100);
+    });
+
+    this.groupedResults = Object.values(groups);
+
+    this.summary = {
+      total: totalResources,
+      compliant: totalCompliant,
+      nonCompliant: totalResources - totalCompliant,
+      percentage:
+        totalResources === 0
+          ? 0
+          : Math.round((totalCompliant / totalResources) * 100)
+    };
+
+  }
 
 }
