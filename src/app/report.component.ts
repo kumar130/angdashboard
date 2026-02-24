@@ -91,17 +91,22 @@ export class ReportComponent implements OnInit {
   summary: any;
 
   ngOnInit() {
+
     this.http
       .get('assets/tag-report.csv', { responseType: 'text' })
       .subscribe(csv => {
+
         Papa.parse(csv, {
           header: true,
           skipEmptyLines: true,
+          transformHeader: (header: string) => header.trim(), // CRITICAL FIX
           complete: (result) => {
             this.rows = result.data as any[];
           }
         });
+
       });
+
   }
 
   addTag() {
@@ -136,18 +141,19 @@ export class ReportComponent implements OnInit {
 
         if (!t.key || !t.value) return;
 
-        const key = t.key; // STRICT CASE-SENSITIVE MATCH
+        const key = t.key.trim();  // STRICT case-sensitive match
+
         const expectedValues = t.value
           .split(',')
           .map((v: string) => v.trim());
 
         const actual = r[key];
 
-        if (!actual || !expectedValues.includes(actual)) {
+        if (!expectedValues.includes(actual)) {
           failures.push({
             key: key,
             expected: t.value,
-            actual: actual ? actual : 'Missing'
+            actual: actual || 'Missing'
           });
         }
 
