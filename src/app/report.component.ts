@@ -19,13 +19,16 @@ import * as Papa from 'papaparse';
       <input placeholder="Key"
              [(ngModel)]="tag.key"
              style="margin-right:10px"/>
+
       <input placeholder="Value (comma separated)"
              [(ngModel)]="tag.value"
              style="margin-right:10px"/>
+
       <button (click)="removeTag(i)">Remove</button>
     </div>
 
     <button (click)="addTag()">Add Tag</button>
+
     <button (click)="generateReport()" style="margin-left:10px">
       Generate Report
     </button>
@@ -99,6 +102,10 @@ export class ReportComponent implements OnInit {
         Papa.parse(csv, {
           header: true,
           skipEmptyLines: true,
+          delimiter: '',
+          transformHeader: (h: string) => h.trim(),  // ✅ trim header only
+          transform: (value: string) =>
+            typeof value === 'string' ? value.trim() : value,  // ✅ trim values
           complete: (result) => {
             this.rows = result.data;
           }
@@ -140,29 +147,16 @@ export class ReportComponent implements OnInit {
 
         if (!t.key || !t.value) return;
 
-        const key = t.key; // STRICT case-sensitive
-
-        // Column must exist exactly
-        if (!(key in r)) {
-          failures.push({
-            key: key,
-            expected: t.value,
-            actual: 'Column Not Found'
-          });
-          return;
-        }
-
-        // Trim actual value
-        const actual = (r[key] ?? '').toString().trim();
-
-        // Multiple expected values supported
+        const key = t.key.trim();   // ✅ case-sensitive
         const expectedValues = t.value
           .split(',')
           .map((v: string) => v.trim());
 
+        const actual = (r[key] ?? '').toString().trim();
+
         if (!expectedValues.includes(actual)) {
           failures.push({
-            key: key,
+            key: t.key,
             expected: t.value,
             actual: actual || 'Missing'
           });
