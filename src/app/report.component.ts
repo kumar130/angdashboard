@@ -99,9 +99,8 @@ export class ReportComponent implements OnInit {
         Papa.parse(csv, {
           header: true,
           skipEmptyLines: true,
-          transformHeader: (header: string) => header.trim(), // CRITICAL FIX
           complete: (result) => {
-            this.rows = result.data as any[];
+            this.rows = result.data;
           }
         });
 
@@ -141,13 +140,25 @@ export class ReportComponent implements OnInit {
 
         if (!t.key || !t.value) return;
 
-        const key = t.key.trim();  // STRICT case-sensitive match
+        const key = t.key; // STRICT case-sensitive
 
+        // Column must exist exactly
+        if (!(key in r)) {
+          failures.push({
+            key: key,
+            expected: t.value,
+            actual: 'Column Not Found'
+          });
+          return;
+        }
+
+        // Trim actual value
+        const actual = (r[key] ?? '').toString().trim();
+
+        // Multiple expected values supported
         const expectedValues = t.value
           .split(',')
           .map((v: string) => v.trim());
-
-        const actual = r[key];
 
         if (!expectedValues.includes(actual)) {
           failures.push({
