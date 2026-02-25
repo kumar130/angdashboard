@@ -5,8 +5,6 @@
         <button routerLink="/" class="home-btn">Home</button>
     </div>
 
-    <!-- TAG CONFIGURATION -->
-
     <div class="config-box">
 
         <h2>Configure Tags</h2>
@@ -15,11 +13,13 @@
 
             <input
                     [(ngModel)]="tag.key"
+                    name="key{{i}}"
                     placeholder="Tag Key"
             />
 
             <input
                     [(ngModel)]="tag.value"
+                    name="value{{i}}"
                     placeholder="Tag Value"
             />
 
@@ -39,8 +39,6 @@
 
     </div>
 
-
-    <!-- DASHBOARD -->
 
     <div *ngIf="total > 0">
 

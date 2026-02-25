@@ -12,7 +12,7 @@ import Chart from 'chart.js/auto';
 })
 export class ReportComponent implements AfterViewInit {
 
-  tags: any[] = [
+  tags = [
     { key: 'environment', value: 'sbx' }
   ];
 
