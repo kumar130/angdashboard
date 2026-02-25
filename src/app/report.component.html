@@ -5,39 +5,80 @@
         <button routerLink="/" class="home-btn">Home</button>
     </div>
 
-    <div class="cards">
+    <!-- TAG CONFIGURATION -->
 
-        <div class="card total">
-            <h2>Total</h2>
-            <p>{{ total }}</p>
+    <div class="config-box">
+
+        <h2>Configure Tags</h2>
+
+        <div *ngFor="let tag of tags; let i = index" class="tag-row">
+
+            <input
+                    [(ngModel)]="tag.key"
+                    placeholder="Tag Key"
+            />
+
+            <input
+                    [(ngModel)]="tag.value"
+                    placeholder="Tag Value"
+            />
+
+            <button (click)="removeTag(i)" class="remove-btn">
+                Remove
+            </button>
+
         </div>
 
-        <div class="card ok">
-            <h2>Compliant</h2>
-            <p>{{ compliant }}</p>
-        </div>
+        <button (click)="addTag()" class="add-btn">
+            Add Tag
+        </button>
 
-        <div class="card bad">
-            <h2>Non-Compliant</h2>
-            <p>{{ nonCompliant }}</p>
-        </div>
+        <button (click)="generateReport()" class="generate-btn">
+            Generate Report
+        </button>
 
     </div>
 
-    <div class="progress-section">
 
-        <h3>Compliance</h3>
+    <!-- DASHBOARD -->
 
-        <div class="progress-bar">
-            <div class="progress" [style.width.%]="compliancePercent">
-                {{ compliancePercent }}%
+    <div *ngIf="total > 0">
+
+        <div class="cards">
+
+            <div class="card total">
+                <h2>Total</h2>
+                <p>{{ total }}</p>
             </div>
+
+            <div class="card ok">
+                <h2>Compliant</h2>
+                <p>{{ compliant }}</p>
+            </div>
+
+            <div class="card bad">
+                <h2>Non-Compliant</h2>
+                <p>{{ nonCompliant }}</p>
+            </div>
+
         </div>
 
-    </div>
+        <div class="progress-section">
 
-    <div class="chart-container">
-        <canvas id="complianceChart"></canvas>
+            <h3>Compliance</h3>
+
+            <div class="progress-bar">
+                <div class="progress" [style.width.%]="compliancePercent">
+                    {{ compliancePercent }}%
+                </div>
+            </div>
+
+        </div>
+
+        <div class="chart-container">
+            <canvas id="complianceChart"></canvas>
+        </div>
+
     </div>
 
 </div>
