@@ -1,5 +1,6 @@
 import { Component, AfterViewInit } from '@angular/core';
-import { RouterLink, FormsModule } from '@angular/router';
+import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import Chart from 'chart.js/auto';
 
 @Component({
@@ -11,12 +12,10 @@ import Chart from 'chart.js/auto';
 })
 export class ReportComponent implements AfterViewInit {
 
-  // Tag Inputs
   tags: any[] = [
     { key: 'environment', value: 'sbx' }
   ];
 
-  // Dashboard Data
   total = 0;
   compliant = 0;
   nonCompliant = 0;
@@ -36,7 +35,6 @@ export class ReportComponent implements AfterViewInit {
 
   generateReport() {
 
-    // 🔥 Replace this with real API later
     this.total = 120;
     this.compliant = Math.floor(Math.random() * 100);
     this.nonCompliant = this.total - this.compliant;
