@@ -1,0 +1,43 @@
+<div class="page">
+
+    <div class="header">
+        <h1>AWS Tagging Compliance Dashboard</h1>
+        <button routerLink="/" class="home-btn">Home</button>
+    </div>
+
+    <div class="cards">
+
+        <div class="card total">
+            <h2>Total</h2>
+            <p>{{ total }}</p>
+        </div>
+
+        <div class="card ok">
+            <h2>Compliant</h2>
+            <p>{{ compliant }}</p>
+        </div>
+
+        <div class="card bad">
+            <h2>Non-Compliant</h2>
+            <p>{{ nonCompliant }}</p>
+        </div>
+
+    </div>
+
+    <div class="progress-section">
+
+        <h3>Compliance</h3>
+
+        <div class="progress-bar">
+            <div class="progress" [style.width.%]="compliancePercent">
+                {{ compliancePercent }}%
+            </div>
+        </div>
+
+    </div>
+
+    <div class="chart-container">
+        <canvas id="complianceChart"></canvas>
+    </div>
+
+</div>
