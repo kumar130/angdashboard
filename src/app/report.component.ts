@@ -6,7 +6,7 @@ import Chart from 'chart.js/auto';
 @Component({
   selector: 'app-report',
   standalone: true,
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, CommonModule, RouterLink, FormsModule],
   templateUrl: './report.component.html',
   styleUrls: ['./report.component.css']
 })
