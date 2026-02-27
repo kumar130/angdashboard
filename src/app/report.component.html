@@ -49,10 +49,9 @@
 
     </div>
 
-    <!-- Dashboard always present -->
-    <div class="dashboard">
+    <div *ngIf="total > 0" class="dashboard">
 
-        <div class="cards" *ngIf="total > 0">
+        <div class="cards">
 
             <div class="card total">
                 <h2>Total</h2>
@@ -71,7 +70,7 @@
 
         </div>
 
-        <div *ngIf="total > 0" class="progress-section">
+        <div class="progress-section">
             <h3>Compliance</h3>
 
             <div class="progress-bar">
@@ -81,9 +80,31 @@
             </div>
         </div>
 
-        <!-- Canvas ALWAYS in DOM -->
-        <div class="chart-container">
+        <div class="chart-wrapper">
+            <h3>Compliance Distribution</h3>
             <canvas id="complianceChart"></canvas>
+        </div>
+
+        <div class="resource-section">
+            <h3>Resource Details</h3>
+
+            <table class="resource-table">
+                <thead>
+                <tr>
+                    <th>Resource Name</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr *ngFor="let r of resources">
+                    <td>{{ r.name }}</td>
+                    <td [class.ok]="r.status === 'Compliant'"
+                        [class.bad]="r.status === 'Non-Compliant'">
+                        {{ r.status }}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         </div>
 
     </div>

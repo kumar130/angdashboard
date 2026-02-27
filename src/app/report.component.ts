@@ -22,6 +22,7 @@ export class ReportComponent {
   nonCompliant = 0;
   compliancePercent = 0;
 
+  resources: any[] = [];
   chart: any;
 
   addTag() {
@@ -34,8 +35,22 @@ export class ReportComponent {
 
   generateReport() {
 
-    this.total = 120;
-    this.compliant = Math.floor(Math.random() * 100);
+    this.total = 20;
+    this.resources = [];
+    this.compliant = 0;
+
+    for (let i = 1; i <= this.total; i++) {
+
+      const isCompliant = Math.random() > 0.3;
+
+      if (isCompliant) this.compliant++;
+
+      this.resources.push({
+        name: `EC2-Instance-${i}`,
+        status: isCompliant ? 'Compliant' : 'Non-Compliant'
+      });
+    }
+
     this.nonCompliant = this.total - this.compliant;
 
     this.compliancePercent = Math.round(
@@ -63,6 +78,10 @@ export class ReportComponent {
         datasets: [{
           data: [this.compliant, this.nonCompliant]
         }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
       }
     });
   }
