@@ -1,4 +1,4 @@
-import { Component, AfterViewInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -7,15 +7,11 @@ import Chart from 'chart.js/auto';
 @Component({
   selector: 'app-report',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterLink,
-    FormsModule
-  ],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './report.component.html',
   styleUrls: ['./report.component.css']
 })
-export class ReportComponent implements AfterViewInit {
+export class ReportComponent {
 
   tags = [
     { key: 'environment', value: 'sbx' }
@@ -27,8 +23,6 @@ export class ReportComponent implements AfterViewInit {
   compliancePercent = 0;
 
   chart: any;
-
-  ngAfterViewInit() {}
 
   addTag() {
     this.tags.push({ key: '', value: '' });
@@ -48,16 +42,21 @@ export class ReportComponent implements AfterViewInit {
       (this.compliant / this.total) * 100
     );
 
-    this.loadChart();
+    setTimeout(() => {
+      this.renderChart();
+    }, 0);
   }
 
-  loadChart() {
+  renderChart() {
+
+    const canvas = document.getElementById('complianceChart') as HTMLCanvasElement;
+    if (!canvas) return;
 
     if (this.chart) {
       this.chart.destroy();
     }
 
-    this.chart = new Chart("complianceChart", {
+    this.chart = new Chart(canvas, {
       type: 'doughnut',
       data: {
         labels: ['Compliant', 'Non-Compliant'],
