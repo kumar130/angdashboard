@@ -16,11 +16,12 @@ export class ReportComponent implements OnInit {
 
   constructor(private http: HttpClient) {}
 
-  resourceTypes: string[] = [];
-  selectedResource = '';
+  // User input
+  tagKey = '';
+  tagValue = '';
 
   allResources: any[] = [];
-  filteredResources: any[] = [];
+  evaluatedResources: any[] = [];
 
   total = 0;
   compliant = 0;
@@ -33,7 +34,7 @@ export class ReportComponent implements OnInit {
     this.loadCSV();
   }
 
-  // ✅ Load CSV from assets
+  // Load CSV from assets
   loadCSV() {
     this.http.get('assets/tag-report.csv', { responseType: 'text' })
       .subscribe(data => {
@@ -41,11 +42,11 @@ export class ReportComponent implements OnInit {
       });
   }
 
-  // ✅ Parse CSV
+  // Parse CSV and group tags per resource
   parseCSV(data: string) {
 
     const lines = data.split('\n').slice(1);
-    this.allResources = [];
+    const resourceMap: any = {};
 
     for (let line of lines) {
 
@@ -53,39 +54,55 @@ export class ReportComponent implements OnInit {
 
       const cols = line.split(',');
 
-      if (cols.length < 3) continue;
+      if (cols.length < 4) continue;
 
-      this.allResources.push({
-        type: cols[0].trim(),
-        name: cols[1].trim(),
-        status: cols[2].trim()
-      });
+      const type = cols[0].trim();
+      const name = cols[1].trim();
+      const key = cols[2].trim();
+      const value = cols[3].trim();
+
+      const resourceId = type + '-' + name;
+
+      if (!resourceMap[resourceId]) {
+        resourceMap[resourceId] = {
+          type,
+          name,
+          tags: {}
+        };
+      }
+
+      resourceMap[resourceId].tags[key] = value;
     }
 
-    // Detect resource types dynamically
-    this.resourceTypes = [...new Set(this.allResources.map(r => r.type))];
-
-    if (this.resourceTypes.length > 0) {
-      this.selectedResource = this.resourceTypes[0];
-      this.filterResources();
-    }
+    this.allResources = Object.values(resourceMap);
   }
 
-  // ✅ Filter by selected resource
-  filterResources() {
+  // Evaluate compliance based on user input
+  generateReport() {
 
-    this.filteredResources = this.allResources
-      .filter(r => r.type === this.selectedResource);
+    if (!this.tagKey || !this.tagValue) return;
+
+    this.evaluatedResources = [];
+
+    for (let resource of this.allResources) {
+
+      const isCompliant =
+        resource.tags[this.tagKey] === this.tagValue;
+
+      this.evaluatedResources.push({
+        ...resource,
+        status: isCompliant ? 'Compliant' : 'Non-Compliant'
+      });
+    }
 
     this.calculateCompliance();
   }
 
-  // ✅ Calculate compliance stats
   calculateCompliance() {
 
-    this.total = this.filteredResources.length;
+    this.total = this.evaluatedResources.length;
 
-    this.compliant = this.filteredResources
+    this.compliant = this.evaluatedResources
       .filter(r => r.status === 'Compliant').length;
 
     this.nonCompliant = this.total - this.compliant;
@@ -97,7 +114,6 @@ export class ReportComponent implements OnInit {
     setTimeout(() => this.renderChart(), 0);
   }
 
-  // ✅ Render pie chart
   renderChart() {
 
     const canvas = document.getElementById('complianceChart') as HTMLCanvasElement;

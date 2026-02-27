@@ -5,15 +5,29 @@
         <button routerLink="/" class="home-btn">Home</button>
     </div>
 
-    <!-- Resource Selector -->
-    <div *ngIf="resourceTypes.length > 0" class="resource-selector">
-        <label>Select Resource Type:</label>
-        <select [(ngModel)]="selectedResource"
-                (change)="filterResources()">
-            <option *ngFor="let r of resourceTypes" [value]="r">
-                {{ r }}
-            </option>
-        </select>
+    <!-- Tag Input Section -->
+    <div class="config-box">
+
+        <h3>Enter Tag to Check Compliance</h3>
+
+        <div class="tag-row">
+            <input
+                    type="text"
+                    [(ngModel)]="tagKey"
+                    placeholder="Tag Key (e.g. environment)"
+            />
+
+            <input
+                    type="text"
+                    [(ngModel)]="tagValue"
+                    placeholder="Tag Value (e.g. sbx)"
+            />
+
+            <button (click)="generateReport()" class="generate-btn">
+                Generate Report
+            </button>
+        </div>
+
     </div>
 
     <!-- Dashboard -->
@@ -21,7 +35,7 @@
 
         <div class="cards">
             <div class="card total">
-                <h2>Total</h2>
+                <h2>Total Resources</h2>
                 <p>{{ total }}</p>
             </div>
 
@@ -37,22 +51,24 @@
         </div>
 
         <div class="chart-wrapper">
-            <h3>{{ selectedResource }} Compliance Distribution</h3>
+            <h3>Compliance Distribution</h3>
             <canvas id="complianceChart"></canvas>
         </div>
 
         <div class="resource-section">
-            <h3>{{ selectedResource }} Resource Details</h3>
+            <h3>All Resources</h3>
 
             <table class="resource-table">
                 <thead>
                 <tr>
+                    <th>Type</th>
                     <th>Name</th>
                     <th>Status</th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr *ngFor="let r of filteredResources">
+                <tr *ngFor="let r of evaluatedResources">
+                    <td>{{ r.type }}</td>
                     <td>{{ r.name }}</td>
                     <td [class.ok]="r.status === 'Compliant'"
                         [class.bad]="r.status === 'Non-Compliant'">
