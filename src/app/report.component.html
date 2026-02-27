@@ -1,37 +1,53 @@
-<div class="dashboard" [style.display]="total > 0 ? 'block' : 'none'">
+<div class="page">
 
-    <div class="cards">
-
-        <div class="card total">
-            <h2>Total</h2>
-            <p>{{ total }}</p>
-        </div>
-
-        <div class="card ok">
-            <h2>Compliant</h2>
-            <p>{{ compliant }}</p>
-        </div>
-
-        <div class="card bad">
-            <h2>Non-Compliant</h2>
-            <p>{{ nonCompliant }}</p>
-        </div>
-
+    <div class="header">
+        <h1>AWS Tagging Compliance Dashboard</h1>
+        <button routerLink="/" class="home-btn">Home</button>
     </div>
 
-    <div class="progress-section">
-        <h3>Compliance</h3>
+    <div class="config-box">
 
-        <div class="progress-bar">
-            <div class="progress" [style.width.%]="compliancePercent">
-                {{ compliancePercent }}%
-            </div>
+        <h2>Configure Tags</h2>
+
+        <div class="tag-row"
+             *ngFor="let tag of tags; let i = index">
+
+            <input
+                    type="text"
+                    [(ngModel)]="tag.key"
+                    name="key{{i}}"
+                    placeholder="Tag Key"
+            />
+
+            <input
+                    type="text"
+                    [(ngModel)]="tag.value"
+                    name="value{{i}}"
+                    placeholder="Tag Value"
+            />
+
+            <button type="button"
+                    (click)="removeTag(i)"
+                    class="remove-btn">
+                Remove
+            </button>
+
         </div>
-    </div>
 
-    <div class="chart-container">
-        <!-- IMPORTANT: No *ngIf here -->
-        <canvas #chartCanvas></canvas>
+        <div class="button-row">
+            <button type="button"
+                    (click)="addTag()"
+                    class="add-btn">
+                Add Tag
+            </button>
+
+            <button type="button"
+                    (click)="generateReport()"
+                    class="generate-btn">
+                Generate Report
+            </button>
+        </div>
+
     </div>
 
 </div>
