@@ -1,40 +1,41 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import Chart from 'chart.js/auto';
+import { Chart } from 'chart.js/auto';
 
 @Component({
   selector: 'app-report',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './report.component.html',
   styleUrls: ['./report.component.css']
 })
 export class ReportComponent implements OnInit {
 
-  constructor(private http: HttpClient) {}
+  @ViewChild('pieCanvas') pieCanvas!: ElementRef;
 
-  // User input
-  tagKey = '';
-  tagValue = '';
+  resources: any[] = [];
+  filteredResources: any[] = [];
 
-  allResources: any[] = [];
-  evaluatedResources: any[] = [];
+  tags: { key: string; value: string }[] = [
+    { key: '', value: '' }
+  ];
 
   total = 0;
   compliant = 0;
-  nonCompliant = 0;
+  failed = 0;
   compliancePercent = 0;
 
   chart: any;
+
+  constructor(private http: HttpClient) {}
 
   ngOnInit() {
     this.loadCSV();
   }
 
-  // Load CSV from assets
   loadCSV() {
     this.http.get('assets/tag-report.csv', { responseType: 'text' })
       .subscribe(data => {
@@ -42,98 +43,77 @@ export class ReportComponent implements OnInit {
       });
   }
 
-  // Parse CSV and group tags per resource
   parseCSV(data: string) {
+    const lines = data.split('\n').filter(l => l.trim() !== '');
+    const headers = lines[0].split(',').map(h => h.trim());
 
-    const lines = data.split('\n').slice(1);
-    const resourceMap: any = {};
+    this.resources = lines.slice(1).map(line => {
+      const values = line.split(',');
+      const obj: any = {};
+      headers.forEach((h, i) => obj[h] = values[i]?.trim() || '');
+      return obj;
+    });
 
-    for (let line of lines) {
+    this.filteredResources = [];
+  }
 
-      if (!line.trim()) continue;
+  addTag() {
+    this.tags.push({ key: '', value: '' });
+  }
 
-      const cols = line.split(',');
+  removeTag(index: number) {
+    this.tags.splice(index, 1);
+  }
 
-      if (cols.length < 4) continue;
+  generateReport() {
+    if (!this.resources.length) return;
 
-      const type = cols[0].trim();
-      const name = cols[1].trim();
-      const key = cols[2].trim();
-      const value = cols[3].trim();
+    this.filteredResources = this.resources.map(resource => {
 
-      const resourceId = type + '-' + name;
+      let isCompliant = true;
 
-      if (!resourceMap[resourceId]) {
-        resourceMap[resourceId] = {
-          type,
-          name,
-          tags: {}
-        };
+      for (let tag of this.tags) {
+        if (!tag.key) continue;
+
+        const value = resource[tag.key];
+
+        if (!value || value !== tag.value) {
+          isCompliant = false;
+          break;
+        }
       }
 
-      resourceMap[resourceId].tags[key] = value;
-    }
-
-    this.allResources = Object.values(resourceMap);
-  }
-
-  // Evaluate compliance based on user input
-  generateReport() {
-
-    if (!this.tagKey || !this.tagValue) return;
-
-    this.evaluatedResources = [];
-
-    for (let resource of this.allResources) {
-
-      const isCompliant =
-        resource.tags[this.tagKey] === this.tagValue;
-
-      this.evaluatedResources.push({
+      return {
         ...resource,
-        status: isCompliant ? 'Compliant' : 'Non-Compliant'
-      });
-    }
+        status: isCompliant ? 'COMPLIANT' : 'FAILED'
+      };
+    });
 
-    this.calculateCompliance();
-  }
-
-  calculateCompliance() {
-
-    this.total = this.evaluatedResources.length;
-
-    this.compliant = this.evaluatedResources
-      .filter(r => r.status === 'Compliant').length;
-
-    this.nonCompliant = this.total - this.compliant;
-
-    this.compliancePercent = this.total > 0
-      ? Math.round((this.compliant / this.total) * 100)
-      : 0;
+    this.total = this.filteredResources.length;
+    this.compliant = this.filteredResources.filter(r => r.status === 'COMPLIANT').length;
+    this.failed = this.total - this.compliant;
+    this.compliancePercent = Math.round((this.compliant / this.total) * 100);
 
     setTimeout(() => this.renderChart(), 0);
   }
 
   renderChart() {
 
-    const canvas = document.getElementById('complianceChart') as HTMLCanvasElement;
-    if (!canvas) return;
+    if (!this.pieCanvas) return;
 
     if (this.chart) {
       this.chart.destroy();
     }
 
-    this.chart = new Chart(canvas, {
-      type: 'doughnut',
+    const ctx = this.pieCanvas.nativeElement.getContext('2d');
+
+    this.chart = new Chart(ctx, {
+      type: 'pie',
       data: {
-        labels: ['Compliant', 'Non-Compliant'],
+        labels: ['Compliant', 'Failed'],
         datasets: [{
-          data: [this.compliant, this.nonCompliant]
+          data: [this.compliant, this.failed]
         }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false
       }
     });
   }
