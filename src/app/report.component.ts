@@ -83,20 +83,19 @@ export class ReportComponent implements OnInit {
         }
       }
 
-      // ✅ Extract resource name properly from ARN
+      // 🔥 GUARANTEED ARN EXTRACTION
       const arn = resource['ResourceARN'] || '';
       let extractedName = '';
 
       if (arn) {
-        const arnParts = arn.split(':');
-        const resourcePart = arnParts[arnParts.length - 1];
+        // Take everything after last "/" OR last ":"
+        const lastSlash = arn.lastIndexOf('/');
+        const lastColon = arn.lastIndexOf(':');
 
-        if (resourcePart.includes('/')) {
-          extractedName = resourcePart.split('/').pop() || '';
-        } else if (resourcePart.includes(':')) {
-          extractedName = resourcePart.split(':').pop() || '';
-        } else {
-          extractedName = resourcePart;
+        const index = Math.max(lastSlash, lastColon);
+
+        if (index !== -1) {
+          extractedName = arn.substring(index + 1);
         }
       }
 
