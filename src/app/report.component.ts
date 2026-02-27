@@ -1,4 +1,5 @@
 import { Component, AfterViewInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import Chart from 'chart.js/auto';
@@ -6,7 +7,11 @@ import Chart from 'chart.js/auto';
 @Component({
   selector: 'app-report',
   standalone: true,
-  imports: [RouterLink, FormsModule, CommonModule, RouterLink, FormsModule],
+  imports: [
+    CommonModule,
+    RouterLink,
+    FormsModule
+  ],
   templateUrl: './report.component.html',
   styleUrls: ['./report.component.css']
 })
