@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import Chart from 'chart.js/auto';
 
 @Component({
@@ -11,57 +12,92 @@ import Chart from 'chart.js/auto';
   templateUrl: './report.component.html',
   styleUrls: ['./report.component.css']
 })
-export class ReportComponent {
+export class ReportComponent implements OnInit {
 
-  tags = [
-    { key: 'environment', value: 'sbx' }
-  ];
+  constructor(private http: HttpClient) {}
+
+  resourceTypes: string[] = [];
+  selectedResource = '';
+
+  allResources: any[] = [];
+  filteredResources: any[] = [];
 
   total = 0;
   compliant = 0;
   nonCompliant = 0;
   compliancePercent = 0;
 
-  resources: any[] = [];
   chart: any;
 
-  addTag() {
-    this.tags.push({ key: '', value: '' });
+  ngOnInit() {
+    this.loadCSV();
   }
 
-  removeTag(index: number) {
-    this.tags.splice(index, 1);
+  // ✅ Load CSV from assets
+  loadCSV() {
+    this.http.get('assets/tag-report.csv', { responseType: 'text' })
+      .subscribe(data => {
+        this.parseCSV(data);
+      });
   }
 
-  generateReport() {
+  // ✅ Parse CSV
+  parseCSV(data: string) {
 
-    this.total = 20;
-    this.resources = [];
-    this.compliant = 0;
+    const lines = data.split('\n').slice(1);
+    this.allResources = [];
 
-    for (let i = 1; i <= this.total; i++) {
+    for (let line of lines) {
 
-      const isCompliant = Math.random() > 0.3;
+      if (!line.trim()) continue;
 
-      if (isCompliant) this.compliant++;
+      const cols = line.split(',');
 
-      this.resources.push({
-        name: `EC2-Instance-${i}`,
-        status: isCompliant ? 'Compliant' : 'Non-Compliant'
+      if (cols.length < 3) continue;
+
+      this.allResources.push({
+        type: cols[0].trim(),
+        name: cols[1].trim(),
+        status: cols[2].trim()
       });
     }
 
-    this.nonCompliant = this.total - this.compliant;
+    // Detect resource types dynamically
+    this.resourceTypes = [...new Set(this.allResources.map(r => r.type))];
 
-    this.compliancePercent = Math.round(
-      (this.compliant / this.total) * 100
-    );
-
-    setTimeout(() => {
-      this.renderChart();
-    }, 0);
+    if (this.resourceTypes.length > 0) {
+      this.selectedResource = this.resourceTypes[0];
+      this.filterResources();
+    }
   }
 
+  // ✅ Filter by selected resource
+  filterResources() {
+
+    this.filteredResources = this.allResources
+      .filter(r => r.type === this.selectedResource);
+
+    this.calculateCompliance();
+  }
+
+  // ✅ Calculate compliance stats
+  calculateCompliance() {
+
+    this.total = this.filteredResources.length;
+
+    this.compliant = this.filteredResources
+      .filter(r => r.status === 'Compliant').length;
+
+    this.nonCompliant = this.total - this.compliant;
+
+    this.compliancePercent = this.total > 0
+      ? Math.round((this.compliant / this.total) * 100)
+      : 0;
+
+    setTimeout(() => this.renderChart(), 0);
+  }
+
+  // ✅ Render pie chart
   renderChart() {
 
     const canvas = document.getElementById('complianceChart') as HTMLCanvasElement;
