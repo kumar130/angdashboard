@@ -1,0 +1,76 @@
+<div class="container">
+
+    <h1>AWS Tagging Compliance Dashboard</h1>
+
+    <a routerLink="/" class="back-btn">← Home</a>
+
+    <h2>Configure Tags</h2>
+
+    <div *ngFor="let tag of tags; let i = index" class="tag-row">
+        <input type="text" [(ngModel)]="tag.key" placeholder="Tag Key">
+        <input type="text" [(ngModel)]="tag.value" placeholder="Tag Value">
+        <button (click)="removeTag(i)" *ngIf="tags.length > 1">Remove</button>
+    </div>
+
+    <button (click)="addTag()">Add Tag</button>
+    <button (click)="generateReport()" class="primary-btn">Generate Report</button>
+
+    <div *ngIf="filteredResources.length">
+
+        <h2>Overall Summary</h2>
+
+        <div class="cards">
+            <div class="card">
+                Total<br>
+                <strong>{{ total }}</strong>
+            </div>
+
+            <div class="card success">
+                Compliant<br>
+                <strong>{{ compliant }}</strong>
+            </div>
+
+            <div class="card fail">
+                Failed<br>
+                <strong>{{ failed }}</strong>
+            </div>
+
+            <div class="card percent">
+                Compliance<br>
+                <strong>{{ compliancePercent }}%</strong>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <canvas #pieCanvas width="300" height="300"></canvas>
+        </div>
+
+        <h2>Resource Details</h2>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Resource Type</th>
+                <th>Resource Name</th>
+                <th>Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let r of filteredResources">
+                <td>{{ r.ResourceType }}</td>
+
+                <!-- Name extracted from ARN -->
+                <td>{{ r.extractedName }}</td>
+
+                <td
+                        [class.success]="r.status === 'COMPLIANT'"
+                        [class.fail]="r.status === 'FAILED'">
+                    {{ r.status }}
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+    </div>
+
+</div>
