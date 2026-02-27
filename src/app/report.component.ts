@@ -83,14 +83,21 @@ export class ReportComponent implements OnInit {
         }
       }
 
-      // 🔥 Extract Name from ARN
+      // ✅ Extract resource name properly from ARN
       const arn = resource['ResourceARN'] || '';
       let extractedName = '';
 
-      if (arn.includes('/')) {
-        extractedName = arn.substring(arn.lastIndexOf('/') + 1);
-      } else if (arn.includes(':')) {
-        extractedName = arn.substring(arn.lastIndexOf(':') + 1);
+      if (arn) {
+        const arnParts = arn.split(':');
+        const resourcePart = arnParts[arnParts.length - 1];
+
+        if (resourcePart.includes('/')) {
+          extractedName = resourcePart.split('/').pop() || '';
+        } else if (resourcePart.includes(':')) {
+          extractedName = resourcePart.split(':').pop() || '';
+        } else {
+          extractedName = resourcePart;
+        }
       }
 
       return {
@@ -103,11 +110,12 @@ export class ReportComponent implements OnInit {
     this.total = this.filteredResources.length;
     this.compliant = this.filteredResources.filter(r => r.status === 'COMPLIANT').length;
     this.failed = this.total - this.compliant;
-    this.compliancePercent = Math.round((this.compliant / this.total) * 100);
+    this.compliancePercent = this.total
+      ? Math.round((this.compliant / this.total) * 100)
+      : 0;
 
     setTimeout(() => this.renderChart(), 0);
   }
-
 
   renderChart() {
 
