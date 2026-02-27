@@ -20,10 +20,25 @@
         <h2>Overall Summary</h2>
 
         <div class="cards">
-            <div class="card">Total<br><strong>{{total}}</strong></div>
-            <div class="card success">Compliant<br><strong>{{compliant}}</strong></div>
-            <div class="card fail">Failed<br><strong>{{failed}}</strong></div>
-            <div class="card percent">Compliance<br><strong>{{compliancePercent}}%</strong></div>
+            <div class="card">
+                Total<br>
+                <strong>{{ total }}</strong>
+            </div>
+
+            <div class="card success">
+                Compliant<br>
+                <strong>{{ compliant }}</strong>
+            </div>
+
+            <div class="card fail">
+                Failed<br>
+                <strong>{{ failed }}</strong>
+            </div>
+
+            <div class="card percent">
+                Compliance<br>
+                <strong>{{ compliancePercent }}%</strong>
+            </div>
         </div>
 
         <div class="chart-container">
@@ -35,18 +50,22 @@
         <table>
             <thead>
             <tr>
-                <th>ResourceType</th>
-                <th>ResourceId</th>
+                <th>Resource Type</th>
+                <th>Resource Name</th>
                 <th>Status</th>
             </tr>
             </thead>
             <tbody>
             <tr *ngFor="let r of filteredResources">
-                <td>{{r.ResourceType}}</td>
-                <td>{{r.ResourceId}}</td>
-                <td [class.success]="r.status==='COMPLIANT'"
-                    [class.fail]="r.status==='FAILED'">
-                    {{r.status}}
+                <td>{{ r.ResourceType }}</td>
+
+                <!-- Name extracted from ARN -->
+                <td>{{ r.extractedName }}</td>
+
+                <td
+                        [class.success]="r.status === 'COMPLIANT'"
+                        [class.fail]="r.status === 'FAILED'">
+                    {{ r.status }}
                 </td>
             </tr>
             </tbody>

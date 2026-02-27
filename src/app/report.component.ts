@@ -83,8 +83,19 @@ export class ReportComponent implements OnInit {
         }
       }
 
+      // 🔥 Extract Name from ARN
+      const arn = resource['ResourceARN'] || '';
+      let extractedName = '';
+
+      if (arn.includes('/')) {
+        extractedName = arn.substring(arn.lastIndexOf('/') + 1);
+      } else if (arn.includes(':')) {
+        extractedName = arn.substring(arn.lastIndexOf(':') + 1);
+      }
+
       return {
         ...resource,
+        extractedName: extractedName,
         status: isCompliant ? 'COMPLIANT' : 'FAILED'
       };
     });
@@ -96,6 +107,7 @@ export class ReportComponent implements OnInit {
 
     setTimeout(() => this.renderChart(), 0);
   }
+
 
   renderChart() {
 
