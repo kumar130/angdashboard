@@ -45,12 +45,18 @@ export class ReportComponent implements OnInit {
 
   parseCSV(data: string) {
     const lines = data.split('\n').filter(l => l.trim() !== '');
-    const headers = lines[0].split(',').map(h => h.trim());
+    const headers = lines[0]
+      .split(',')
+      .map(h => h.trim().replace(/\r/g, ''));
 
     this.resources = lines.slice(1).map(line => {
       const values = line.split(',');
       const obj: any = {};
-      headers.forEach((h, i) => obj[h] = values[i]?.trim() || '');
+
+      headers.forEach((h, i) => {
+        obj[h] = values[i]?.trim().replace(/\r/g, '') || '';
+      });
+
       return obj;
     });
 
@@ -66,7 +72,6 @@ export class ReportComponent implements OnInit {
   }
 
   generateReport() {
-    if (!this.resources.length) return;
 
     this.filteredResources = this.resources.map(resource => {
 
@@ -83,15 +88,13 @@ export class ReportComponent implements OnInit {
         }
       }
 
-      // 🔥 GUARANTEED ARN EXTRACTION
-      const arn = resource['ResourceARN'] || '';
+      // ✅ Correct column name: ResourceArn
+      const arn = resource['ResourceArn'] || '';
       let extractedName = '';
 
       if (arn) {
-        // Take everything after last "/" OR last ":"
         const lastSlash = arn.lastIndexOf('/');
         const lastColon = arn.lastIndexOf(':');
-
         const index = Math.max(lastSlash, lastColon);
 
         if (index !== -1) {
@@ -99,9 +102,14 @@ export class ReportComponent implements OnInit {
         }
       }
 
+      // Fallback
+      if (!extractedName) {
+        extractedName = 'Unknown';
+      }
+
       return {
         ...resource,
-        extractedName: extractedName,
+        extractedName,
         status: isCompliant ? 'COMPLIANT' : 'FAILED'
       };
     });
